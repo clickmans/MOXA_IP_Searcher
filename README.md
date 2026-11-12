@@ -1,7 +1,10 @@
 # MOXA 设备 IP 搜索工具
 
 一个 **Windows 64 位、单文件、零依赖** 的 MOXA 全产品 IP 广播搜索工具。
-双击 `dist\MOXA_IP_Searcher.exe` 即可运行，无需安装、无需 .NET / VC 运行库 / Python。
+双击 `MOXA_IP_Searcher.exe` 即可运行，无需安装、无需 .NET / VC 运行库 / Python。
+
+> **直接下载（最新版）**：<https://github.com/clickmans/MOXA_IP_Searcher/releases/latest>
+> 仓库里只有源码与文档，`dist\` 下的 exe 不进版本库，二进制统一走 Releases 附件。
 
 ---
 
