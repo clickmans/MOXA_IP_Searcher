@@ -241,8 +241,8 @@ func ubusURL(ip string) string {
 // EUI-64) - the address every IPv6 node forms for itself, one to one with its
 // hardware address.
 //
-//	50:0B:88:08:B7:1A -> fe80::520b:88ff:fe08:b71a
-//	00:90:E8:E0:0F:D7 -> fe80::290:e8ff:fee0:fd7
+//	50:0B:88:00:00:1A -> fe80::520b:88ff:fe00:1a
+//	00:90:E8:00:00:D7 -> fe80::290:e8ff:fe00:d7
 //
 // The first byte gets the U/L bit flipped (^ 0x02) and ff:fe is inserted in the
 // middle. Because the mapping is bijective, a device can be reached by identity
@@ -409,7 +409,7 @@ func ubusPost(ctx context.Context, client *http.Client, url string, timeout time
 // The table is read for ONE reason: the model answer is only trustworthy for
 // the device that actually owns the IP address. Several MOXA devices may share
 // one IP (the reference network has an AWK-1161C, an AWK-1132C and an EDS-405A
-// on 192.168.127.253), and HTTPS resolves the address through ARP, so the
+// on 192.168.100.253), and HTTPS resolves the address through ARP, so the
 // answer always belongs to the device ARP knows - not necessarily to the row we
 // asked for. Comparing the row MAC with the ARP MAC is the ownership proof.
 const (
@@ -481,7 +481,7 @@ type arpRow struct {
 // carries no MAC, and a non-Ethernet entry cannot be compared with a device MAC.
 //
 // One address may be cached on SEVERAL interfaces at once - the reference
-// network has 192.168.127.253 on the Ethernet and on the WLAN interface, with a
+// network has 192.168.100.253 on the Ethernet and on the WLAN interface, with a
 // different device behind each - so the entry of the interface that actually
 // routes to the address wins (see selectARPTable). That is the device an HTTPS
 // connection would reach, which is precisely the ownership we have to prove.
@@ -641,7 +641,7 @@ func routedInterfaceIndex(adapters []Adapter, ip string) int {
 // arpMAC returns the MAC the ARP table resolves for ip, or "".
 //
 // The text of the address is normalized through net.ParseIP so that a device
-// address such as "192.168.127.253" matches the key of the table regardless of
+// address such as "192.168.100.253" matches the key of the table regardless of
 // the textual form the protocol parser produced.
 func arpMAC(arp map[string]string, ip string) string {
 	if len(arp) == 0 || ip == "" {

@@ -10,7 +10,7 @@ import (
 // is turned into the marketing model name.
 //
 // The expected values are the two devices of the reference network
-// (NP6450_5599 -> NPort 6450, MG-MB3180_579 -> MGate MB3180) plus the families
+// (NP6450_0001 -> NPort 6450, MG-MB3180_0001 -> MGate MB3180) plus the families
 // whose code already is the marketing name.
 func TestModelFromName(t *testing.T) {
 	tests := []struct {
@@ -18,11 +18,11 @@ func TestModelFromName(t *testing.T) {
 		in   string
 		want string
 	}{
-		{name: "NPort 6450 with serial suffix", in: "NP6450_5599", want: "NPort 6450"},
+		{name: "NPort 6450 with serial suffix", in: "NP6450_0001", want: "NPort 6450"},
 		{name: "NPort 6450 without suffix", in: "NP6450", want: "NPort 6450"},
 		{name: "NPort 5110A", in: "NP5110A", want: "NPort 5110A"},
 		{name: "NPort 5110A with suffix", in: "NP5110A_1234", want: "NPort 5110A"},
-		{name: "MGate MB3180 with serial suffix", in: "MG-MB3180_579", want: "MGate MB3180"},
+		{name: "MGate MB3180 with serial suffix", in: "MG-MB3180_0001", want: "MGate MB3180"},
 		{name: "MGate MB3180 without suffix", in: "MG-MB3180", want: "MGate MB3180"},
 		{name: "MGate MB3660", in: "MG-MB3660_12", want: "MGate MB3660"},
 		{name: "EDS switch keeps its code", in: "EDS-510E_1234", want: "EDS-510E"},
@@ -35,7 +35,7 @@ func TestModelFromName(t *testing.T) {
 		{name: "trailing underscore carries no information", in: "NP6450_", want: "NPort 6450"},
 		{name: "only the prefix", in: "NP", want: "NP"},
 		{name: "only the MGate prefix", in: "MG-", want: "MG-"},
-		{name: "surrounding blanks", in: "  NP6450_5599  ", want: "NPort 6450"},
+		{name: "surrounding blanks", in: "  NP6450_0001  ", want: "NPort 6450"},
 		{name: "empty", in: "", want: ""},
 		{name: "only blanks", in: "   ", want: ""},
 	}
@@ -54,8 +54,8 @@ func TestStripDeviceNameSuffix(t *testing.T) {
 		in   string
 		want string
 	}{
-		{in: "NP6450_5599", want: "NP6450"},
-		{in: "MG-MB3180_579", want: "MG-MB3180"},
+		{in: "NP6450_0001", want: "NP6450"},
+		{in: "MG-MB3180_0001", want: "MG-MB3180"},
 		{in: "EDS-510E_1234", want: "EDS-510E"},
 		{in: "NP6450", want: "NP6450"},
 		{in: "MG-MB3180", want: "MG-MB3180"},
@@ -63,7 +63,7 @@ func TestStripDeviceNameSuffix(t *testing.T) {
 		{in: "NP6450_a", want: "NP6450_a"},
 		{in: "NP6450_", want: "NP6450_"},
 		{in: "_5599", want: "_5599"},
-		{in: "MG-MB3180_579_2", want: "MG-MB3180_579"},
+		{in: "MG-MB3180_0001_2", want: "MG-MB3180_0001"},
 		{in: "", want: ""},
 	}
 	for _, test := range tests {
@@ -76,7 +76,7 @@ func TestStripDeviceNameSuffix(t *testing.T) {
 // TestModelFromNameNeverReturnsEmptyForACode keeps the promise of the fallback
 // chain: an unrecognised code is better than an empty cell.
 func TestModelFromNameNeverReturnsEmptyForACode(t *testing.T) {
-	for _, code := range []string{"NP6450_5599", "MG-MB3180_579", "EDS-510E_1", "EOM-106", "QUIRKY_9", "X"} {
+	for _, code := range []string{"NP6450_0001", "MG-MB3180_0001", "EDS-510E_1", "EOM-106", "QUIRKY_9", "X"} {
 		if got := ModelFromName(code); got == "" {
 			t.Errorf("ModelFromName(%q) = \"\", want a non empty model", code)
 		}
@@ -92,10 +92,10 @@ func TestResolveModelChain(t *testing.T) {
 		dev   string
 		want  string
 	}{
-		{name: "answered model wins", model: "MGate MB3180", dev: "MG-MB3180_579", want: "MGate MB3180"},
+		{name: "answered model wins", model: "MGate MB3180", dev: "MG-MB3180_0001", want: "MGate MB3180"},
 		{name: "answered model wins over a different name", model: "NPort 6450", dev: "EOM-106", want: "NPort 6450"},
-		{name: "name is used when the model is empty", model: "", dev: "NP6450_5599", want: "NPort 6450"},
-		{name: "name with blanks", model: "   ", dev: "MG-MB3180_579", want: "MGate MB3180"},
+		{name: "name is used when the model is empty", model: "", dev: "NP6450_0001", want: "NPort 6450"},
+		{name: "name with blanks", model: "   ", dev: "MG-MB3180_0001", want: "MGate MB3180"},
 		{name: "nothing known stays empty", model: "", dev: "", want: ""},
 	}
 	for _, test := range tests {
@@ -110,7 +110,7 @@ func TestResolveModelChain(t *testing.T) {
 // TestDisplayModelPlaceholder is the rule the GUI applies: "-" when neither a
 // model nor a usable name is known.
 func TestDisplayModelPlaceholder(t *testing.T) {
-	if got := DisplayModel("", "NP6450_5599"); got != "NPort 6450" {
+	if got := DisplayModel("", "NP6450_0001"); got != "NPort 6450" {
 		t.Errorf("DisplayModel = %q, want NPort 6450", got)
 	}
 	if got := DisplayModel("", ""); got != "-" {
@@ -124,17 +124,17 @@ func TestDisplayModelPlaceholder(t *testing.T) {
 func TestAggregatorResolvesModelFromName(t *testing.T) {
 	aggregator := newAggregator()
 	aggregator.add(&Device{
-		IP:       "192.168.127.250",
-		MAC:      "00:90:E8:3C:F2:20",
+		IP:       "192.168.100.250",
+		MAC:      "00:90:E8:00:00:20",
 		Protocol: ProtoName4800,
 		Adapters: []string{"WLAN"},
 		deviceID: append([]byte(nil), deviceIDNPort6450...),
 	})
-	if !aggregator.setName(deviceIDNPort6450, "192.168.127.250", "NP6450_5599") {
+	if !aggregator.setName(deviceIDNPort6450, "192.168.100.250", "NP6450_0001") {
 		t.Fatal("setName did not match the stored device id")
 	}
 	// A 0x96 answer provides the firmware of the same row.
-	if !aggregator.setVersion(deviceIDNPort6450, "192.168.127.250", "V1.10", 5599) {
+	if !aggregator.setVersion(deviceIDNPort6450, "192.168.100.250", "V1.10", 5599) {
 		t.Fatal("setVersion did not match the stored device id")
 	}
 
@@ -145,7 +145,7 @@ func TestAggregatorResolvesModelFromName(t *testing.T) {
 	if devices[0].Model != "NPort 6450" {
 		t.Errorf("Model = %q, want NPort 6450 (derived from the name)", devices[0].Model)
 	}
-	if devices[0].Name != "NP6450_5599" {
+	if devices[0].Name != "NP6450_0001" {
 		t.Errorf("Name = %q, want the raw device name", devices[0].Name)
 	}
 	if devices[0].Firmware != "V1.10" {
@@ -161,22 +161,22 @@ func TestAggregatorResolvesModelFromName(t *testing.T) {
 func TestAggregatorKeepsAnsweredModel(t *testing.T) {
 	aggregator := newAggregator()
 	aggregator.add(&Device{
-		IP:       "192.168.127.254",
-		MAC:      "00:90:E8:F1:DA:9B",
+		IP:       "192.168.100.254",
+		MAC:      "00:90:E8:00:00:9B",
 		Protocol: ProtoName4800,
 		Adapters: []string{"以太网"},
 		deviceID: append([]byte(nil), deviceIDMGateMB3180...),
 	})
-	aggregator.setModel(deviceIDMGateMB3180, "192.168.127.254", "MGate MB3180")
-	aggregator.setName(deviceIDMGateMB3180, "192.168.127.254", "MG-MB3180_579")
-	aggregator.setVersion(deviceIDMGateMB3180, "192.168.127.254", "V2.7", 579)
+	aggregator.setModel(deviceIDMGateMB3180, "192.168.100.254", "MGate MB3180")
+	aggregator.setName(deviceIDMGateMB3180, "192.168.100.254", "MG-MB3180_0001")
+	aggregator.setVersion(deviceIDMGateMB3180, "192.168.100.254", "V2.7", 579)
 
 	devices := aggregator.snapshot()
 	if devices[0].Model != "MGate MB3180" {
 		t.Errorf("Model = %q, want the answered MGate MB3180", devices[0].Model)
 	}
-	if devices[0].Name != "MG-MB3180_579" {
-		t.Errorf("Name = %q, want MG-MB3180_579", devices[0].Name)
+	if devices[0].Name != "MG-MB3180_0001" {
+		t.Errorf("Name = %q, want MG-MB3180_0001", devices[0].Name)
 	}
 	if devices[0].Firmware != "V2.7" {
 		t.Errorf("Firmware = %q, want V2.7", devices[0].Firmware)
@@ -188,23 +188,23 @@ func TestAggregatorKeepsAnsweredModel(t *testing.T) {
 func TestPendingDetailQueries(t *testing.T) {
 	aggregator := newAggregator()
 	// Two addresses of one device: only one query may be scheduled.
-	for _, ip := range []string{"192.168.127.254", "192.168.127.253"} {
+	for _, ip := range []string{"192.168.100.254", "192.168.100.253"} {
 		aggregator.add(&Device{
 			IP:       ip,
-			MAC:      "00:90:E8:F1:DA:9B",
+			MAC:      "00:90:E8:00:00:9B",
 			Protocol: ProtoName4800,
 			Adapters: []string{"以太网"},
 			deviceID: append([]byte(nil), deviceIDMGateMB3180...),
 		})
 	}
 	// A row without a 12 byte identity cannot be asked anything.
-	aggregator.add(&Device{IP: "192.168.127.3", MAC: "50:0B:88:0B:62:67", Protocol: ProtoNameAXOM, Name: "EOM-106"})
+	aggregator.add(&Device{IP: "192.168.100.3", MAC: "50:0B:88:00:00:67", Protocol: ProtoNameAXOM, Name: "EOM-106"})
 
 	pending := aggregator.pendingDetailQueries()
 	if len(pending) != 1 {
 		t.Fatalf("pendingDetailQueries = %d, want 1 (one query per identity)", len(pending))
 	}
-	if pending[0].IP != "192.168.127.254" {
+	if pending[0].IP != "192.168.100.254" {
 		t.Errorf("pending device = %s, want the first row of the device", pending[0].IP)
 	}
 	if got := len(aggregator.pendingDetailQueries()); got != 0 {
@@ -217,14 +217,14 @@ func TestPendingDetailQueries(t *testing.T) {
 func TestAggregatorSetVersionKeepsKnownFirmware(t *testing.T) {
 	aggregator := newAggregator()
 	aggregator.add(&Device{
-		IP:       "192.168.127.254",
-		MAC:      "00:90:E8:F1:DA:9B",
+		IP:       "192.168.100.254",
+		MAC:      "00:90:E8:00:00:9B",
 		Protocol: ProtoName4800,
 		Adapters: []string{"以太网"},
 		deviceID: append([]byte(nil), deviceIDMGateMB3180...),
 	})
-	aggregator.setFirmware(deviceIDMGateMB3180, "192.168.127.254", "V2.6 build 210915")
-	aggregator.setVersion(deviceIDMGateMB3180, "192.168.127.254", "V2.7", 579)
+	aggregator.setFirmware(deviceIDMGateMB3180, "192.168.100.254", "V2.6 build 210915")
+	aggregator.setVersion(deviceIDMGateMB3180, "192.168.100.254", "V2.7", 579)
 
 	if got := aggregator.snapshot()[0].Firmware; got != "V2.6 build 210915" {
 		t.Errorf("Firmware = %q, want the first known version", got)
@@ -245,13 +245,13 @@ func TestAXOMRowsUnchangedByFallback(t *testing.T) {
 		mac       []byte
 		firmware  string
 	}{
-		{ip: "192.168.127.3", lastOctet: 3, mac: []byte{0x50, 0x0B, 0x88, 0x0B, 0x62, 0x67}, firmware: "V3.1.6 build 24072314"},
-		{ip: "192.168.127.4", lastOctet: 4, mac: []byte{0x00, 0x90, 0xE8, 0x00, 0x05, 0xD0}, firmware: "V3.1.10 build 26102915"},
+		{ip: "192.168.100.3", lastOctet: 3, mac: []byte{0x50, 0x0B, 0x88, 0x00, 0x00, 0x67}, firmware: "V3.1.6 build 24072314"},
+		{ip: "192.168.100.4", lastOctet: 4, mac: []byte{0x00, 0x90, 0xE8, 0x00, 0x00, 0xD0}, firmware: "V3.1.10 build 26102915"},
 	}
 	aggregator := newAggregator()
 	for _, test := range tests {
 		frame := buildAXOMReply([]axomReplyTLV{
-			{typ: axomTypeIP, value: []byte{192, 168, 127, test.lastOctet}},
+			{typ: axomTypeIP, value: []byte{192, 168, 100, test.lastOctet}},
 			{typ: axomTypeMAC, value: test.mac},
 			{typ: axomTypeName, value: append([]byte("EOM-106"), 0, 0)},
 			{typ: axomTypeFirmware, value: []byte(test.firmware + "\n")},

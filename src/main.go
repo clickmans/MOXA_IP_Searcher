@@ -7,7 +7,7 @@
 //
 // 带 --lldp <ip> 时读取该设备的 LLDP 邻居表并打印为文本表格（v1.8，现场排障用）：
 //
-//	MOXA_IP_Searcher.exe --lldp 192.168.127.4
+//	MOXA_IP_Searcher.exe --lldp 192.168.100.4
 package main
 
 import (

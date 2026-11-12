@@ -10,17 +10,17 @@ import (
 // Fixtures are taken verbatim from PROTOCOL_SPEC.md §9 (which in turn were
 // decoded from the reference capture files by _analysis/decode_fixtures.py).
 const (
-	fixture4800Reply24 = "8100001800000000005101801a51500b880f8c29c0a87ffe"
-	fixture4800Reply40 = "8100002800000000002600805226500b88102389c0a87ffe500b88102389c0a87efe500b8810238a"
-	fixture4800Reply20 = "8104001400000000002600805226500b88102389"
-	fixture4800Model   = "8300006800000000005101801a51500b880f8c29540004000001000000004d6f64656c094e5035313130410a557067746f75740938303030300a" +
+	fixture4800Reply24 = "8100001800000000005101801a51500b88000029c0a864fe"
+	fixture4800Reply40 = "8100002800000000002600805226500b88000089c0a864fe500b88000089c0a87efe500b8810238a"
+	fixture4800Reply20 = "8104001400000000002600805226500b88000089"
+	fixture4800Model   = "8300006800000000005101801a51500b88000029540004000001000000004d6f64656c094e5035313130410a557067746f75740938303030300a" +
 		"5365637572697479566965770956310a"
-	fixture4000Reply64 = "c90000402627cad5547286000700c0a800a30090e80005d0454f4d2d313036" +
+	fixture4000Reply64 = "c90000402627cad5547286000700c0a863a30090e80000d0454f4d2d313036" +
 		"000000000000000000000000000000000000000000000000000000000000000000"
 	fixtureAXOMReply = "41584f4d7c00000000080107740000000000000110000000a450c89b60823b64dad72df91e3da7c8" +
 		"340000012000000061776b2d31313631630000000000000000000000000000000000000000000000" +
-		"1000000104000000c0a87ffc3300000106000000500b880e1b530000010000070400000002000000" +
-		"3900000104000000c0a87f64"
+		"1000000104000000c0a864fc3300000106000000500b880000530000010000070400000002000000" +
+		"3900000104000000c0a86464"
 	fixtureAXOMRequest = "41584f4d2000000000080107180000000000000110000000a450c89b60823b64dad72df91e3da7c8"
 )
 
@@ -46,7 +46,7 @@ func buildWSUReply(model, ip, mac, mask, requesterIP string) []byte {
 	frame[0], frame[1] = 0x0D, 0xBD
 	binary.BigEndian.PutUint16(frame[wsuFlagOffset:wsuFlagOffset+2], wsuReplyFlag)
 	binary.BigEndian.PutUint32(frame[wsuLengthOffset:wsuLengthOffset+4], uint32(wsuReplyLen-wsuLengthBias))
-	copy(frame[20:26], []byte{0x50, 0x0B, 0x88, 0x09, 0x2B, 0xDC})
+	copy(frame[20:26], []byte{0x50, 0x0B, 0x88, 0x00, 0x00, 0xDC})
 	copy(frame[26:32], []byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
 	copyFixedString(frame[46:58], model)
 	copyFixedString(frame[79:95], ip)
@@ -64,12 +64,12 @@ func TestParse4800(t *testing.T) {
 		wantIP  string
 		wantMAC string
 	}{
-		{name: "24B NPort 5110A", payload: fixture4800Reply24, wantOK: true, wantIP: "192.168.127.254", wantMAC: "50:0B:88:0F:8C:29"},
-		{name: "40B dual IP host", payload: fixture4800Reply40, wantOK: true, wantIP: "192.168.127.254", wantMAC: "50:0B:88:10:23:89"},
+		{name: "24B NPort 5110A", payload: fixture4800Reply24, wantOK: true, wantIP: "192.168.100.254", wantMAC: "50:0B:88:00:00:29"},
+		{name: "40B dual IP host", payload: fixture4800Reply40, wantOK: true, wantIP: "192.168.100.254", wantMAC: "50:0B:88:00:00:89"},
 		{name: "20B without IP is dropped", payload: fixture4800Reply20, wantOK: false},
-		{name: "wrong command byte", payload: "8200001800000000005101801a51500b880f8c29c0a87ffe", wantOK: false},
+		{name: "wrong command byte", payload: "8200001800000000005101801a51500b88000029c0a864fe", wantOK: false},
 		{name: "truncated", payload: "8100001800000000005101801a51500b880f8c", wantOK: false},
-		{name: "zero IP is rejected", payload: "8100001800000000005101801a51500b880f8c2900000000", wantOK: false},
+		{name: "zero IP is rejected", payload: "8100001800000000005101801a51500b8800002900000000", wantOK: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -125,14 +125,14 @@ func TestParse4000(t *testing.T) {
 		wantModel string
 	}{
 		{
-			// The frame field holds the PC address (192.168.0.163); the device
+			// The frame field holds the PC address (192.168.99.163); the device
 			// address is the source address and must win.
 			name:      "source address wins over the in-frame requester address",
 			payload:   mustHex(t, fixture4000Reply64),
-			src:       net.IPv4(192, 168, 127, 3),
+			src:       net.IPv4(192, 168, 100, 3),
 			wantOK:    true,
-			wantIP:    "192.168.127.3",
-			wantMAC:   "00:90:E8:00:05:D0",
+			wantIP:    "192.168.100.3",
+			wantMAC:   "00:90:E8:00:00:D0",
 			wantModel: "EOM-106",
 		},
 		{
@@ -140,8 +140,8 @@ func TestParse4000(t *testing.T) {
 			payload:   mustHex(t, fixture4000Reply64),
 			src:       nil,
 			wantOK:    true,
-			wantIP:    "192.168.0.163",
-			wantMAC:   "00:90:E8:00:05:D0",
+			wantIP:    "192.168.99.163",
+			wantMAC:   "00:90:E8:00:00:D0",
 			wantModel: "EOM-106",
 		},
 		{
@@ -149,24 +149,24 @@ func TestParse4000(t *testing.T) {
 			// the 4800 or AXOM replies) - this is the regression that made them
 			// invisible before the 0x48 discovery command was used.
 			name:      "EDS-510A-3SFP-2SSC that only answers 4000",
-			payload:   build4000Reply("EDS-510A-3SFP-2SSC", "192.168.127.100", []byte{0x00, 0x90, 0xE8, 0xD6, 0x59, 0x85}),
-			src:       net.IPv4(192, 168, 127, 1),
+			payload:   build4000Reply("EDS-510A-3SFP-2SSC", "192.168.100.100", []byte{0x00, 0x90, 0xE8, 0x00, 0x02, 0x85}),
+			src:       net.IPv4(192, 168, 100, 1),
 			wantOK:    true,
-			wantIP:    "192.168.127.1",
-			wantMAC:   "00:90:E8:D6:59:85",
+			wantIP:    "192.168.100.1",
+			wantMAC:   "00:90:E8:00:02:85",
 			wantModel: "EDS-510A-3SFP-2SSC",
 		},
 		{
 			name:      "EOM-409-3SSC that only answers 4000",
-			payload:   build4000Reply("EOM-409-3SSC", "192.168.127.100", []byte{0x50, 0x0B, 0x88, 0x0F, 0xD0, 0xD9}),
-			src:       net.IPv4(192, 168, 127, 2),
+			payload:   build4000Reply("EOM-409-3SSC", "192.168.100.100", []byte{0x50, 0x0B, 0x88, 0x00, 0x00, 0xD9}),
+			src:       net.IPv4(192, 168, 100, 2),
 			wantOK:    true,
-			wantIP:    "192.168.127.2",
-			wantMAC:   "50:0B:88:0F:D0:D9",
+			wantIP:    "192.168.100.2",
+			wantMAC:   "50:0B:88:00:00:D9",
 			wantModel: "EOM-409-3SSC",
 		},
-		{name: "wrong command byte", payload: mustHex(t, "c80000402627cad5547286000700c0a800a30090e80005d0"), src: net.IPv4(192, 168, 127, 3), wantOK: false},
-		{name: "too short", payload: mustHex(t, "c90000402627cad5547286000700c0a800a3"), src: net.IPv4(192, 168, 127, 3), wantOK: false},
+		{name: "wrong command byte", payload: mustHex(t, "c80000402627cad5547286000700c0a863a30090e80000d0"), src: net.IPv4(192, 168, 100, 3), wantOK: false},
+		{name: "too short", payload: mustHex(t, "c90000402627cad5547286000700c0a863a3"), src: net.IPv4(192, 168, 100, 3), wantOK: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -233,11 +233,11 @@ func TestParseAXOM(t *testing.T) {
 	if !ok {
 		t.Fatal("ParseAXOM returned false for the reference fixture")
 	}
-	if device.IP != "192.168.127.252" {
-		t.Errorf("IP = %q, want 192.168.127.252", device.IP)
+	if device.IP != "192.168.100.252" {
+		t.Errorf("IP = %q, want 192.168.100.252", device.IP)
 	}
-	if device.MAC != "50:0B:88:0E:1B:53" {
-		t.Errorf("MAC = %q, want 50:0B:88:0E:1B:53", device.MAC)
+	if device.MAC != "50:0B:88:00:00:53" {
+		t.Errorf("MAC = %q, want 50:0B:88:00:00:53", device.MAC)
 	}
 	if device.Name != "awk-1161c" {
 		t.Errorf("Name = %q, want awk-1161c", device.Name)
@@ -262,7 +262,7 @@ func TestParseAXOMRejectsGarbage(t *testing.T) {
 }
 
 func TestBuildAXOMRequest(t *testing.T) {
-	requests := buildAXOMRequests(adapterCtx{Name: "WLAN", IP: net.IPv4(192, 168, 0, 163)})
+	requests := buildAXOMRequests(adapterCtx{Name: "WLAN", IP: net.IPv4(192, 168, 99, 163)})
 	// Two dialects: ...07 for the WIFI 6 family, ...01 for the EDS-G4012 class.
 	if len(requests) != len(axomRequestTypes) {
 		t.Fatalf("len(requests) = %d, want %d", len(requests), len(axomRequestTypes))
@@ -299,7 +299,7 @@ func TestBuildAXOMRequest(t *testing.T) {
 }
 
 func TestParseWSU(t *testing.T) {
-	frame := buildWSUReply("AWK-1131A-US", "192.168.127.253", "50:0B:88:09:2B:DC", "255.255.255.0", "192.168.127.100")
+	frame := buildWSUReply("AWK-1131A-US", "192.168.100.253", "50:0B:88:00:00:DC", "255.255.255.0", "192.168.100.100")
 	device, ok := ParseWSU(frame)
 	if !ok {
 		t.Fatal("ParseWSU returned false for the synthesized fixture")
@@ -307,11 +307,11 @@ func TestParseWSU(t *testing.T) {
 	if device.Model != "AWK-1131A-US" {
 		t.Errorf("Model = %q, want AWK-1131A-US", device.Model)
 	}
-	if device.IP != "192.168.127.253" {
-		t.Errorf("IP = %q, want 192.168.127.253", device.IP)
+	if device.IP != "192.168.100.253" {
+		t.Errorf("IP = %q, want 192.168.100.253", device.IP)
 	}
-	if device.MAC != "50:0B:88:09:2B:DC" {
-		t.Errorf("MAC = %q, want 50:0B:88:09:2B:DC", device.MAC)
+	if device.MAC != "50:0B:88:00:00:DC" {
+		t.Errorf("MAC = %q, want 50:0B:88:00:00:DC", device.MAC)
 	}
 	if device.Protocol != ProtoNameWSU {
 		t.Errorf("Protocol = %q, want %q", device.Protocol, ProtoNameWSU)
@@ -319,7 +319,7 @@ func TestParseWSU(t *testing.T) {
 }
 
 func TestParseWSURejectsBadMagic(t *testing.T) {
-	frame := buildWSUReply("AWK-1131A-US", "192.168.127.253", "50:0B:88:09:2B:DC", "255.255.255.0", "192.168.127.100")
+	frame := buildWSUReply("AWK-1131A-US", "192.168.100.253", "50:0B:88:00:00:DC", "255.255.255.0", "192.168.100.100")
 	frame[0] = 0x00
 	if _, ok := ParseWSU(frame); ok {
 		t.Fatal("frame with a broken magic was accepted")
@@ -328,21 +328,21 @@ func TestParseWSURejectsBadMagic(t *testing.T) {
 
 func TestParseWSUFallsBackToScan(t *testing.T) {
 	// Fixed offsets hold garbage, the scan fallback must still recover the IP.
-	frame := buildWSUReply("", "192.168.127.253", "50:0B:88:09:2B:DC", "255.255.255.0", "192.168.127.100")
+	frame := buildWSUReply("", "192.168.100.253", "50:0B:88:00:00:DC", "255.255.255.0", "192.168.100.100")
 	copy(frame[46:58], []byte{0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f})
 	device, ok := ParseWSU(frame)
 	if !ok {
 		t.Fatal("ParseWSU returned false although the frame carries an IP")
 	}
-	if device.IP != "192.168.127.253" {
-		t.Errorf("IP = %q, want 192.168.127.253 (recovered by scanning)", device.IP)
+	if device.IP != "192.168.100.253" {
+		t.Errorf("IP = %q, want 192.168.100.253 (recovered by scanning)", device.IP)
 	}
 }
 
 func TestBuildWSURequest(t *testing.T) {
 	ac := adapterCtx{
 		Name:       "WLAN",
-		IP:         net.IPv4(192, 168, 0, 163),
+		IP:         net.IPv4(192, 168, 99, 163),
 		Mask:       net.CIDRMask(24, 32),
 		MAC:        net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
 		ListenPort: 15802,
@@ -364,8 +364,8 @@ func TestBuildWSURequest(t *testing.T) {
 	if got := string(request[20:26]); got != string(ac.MAC) {
 		t.Errorf("[20:26] = %x, want %x", request[20:26], ac.MAC)
 	}
-	if got := fixedString(request[46:62]); got != "192.168.0.163" {
-		t.Errorf("[46:62] = %q, want 192.168.0.163", got)
+	if got := fixedString(request[46:62]); got != "192.168.99.163" {
+		t.Errorf("[46:62] = %q, want 192.168.99.163", got)
 	}
 	if got := fixedString(request[62:68]); got != "15802" {
 		t.Errorf("[62:68] = %q, want 15802", got)
@@ -394,13 +394,13 @@ func TestParseModelReplyWithoutModel(t *testing.T) {
 }
 
 func TestBuildModelRequest(t *testing.T) {
-	deviceID := mustHex(t, "005101801a51500b880f8c29")
+	deviceID := mustHex(t, "005101801a51500b88000029")
 	request := BuildModelRequest(deviceID, 7)
 	// The captured frame is `03 00 00 14 | 00 00 00 00 | <deviceID 12B>` = 20
 	// bytes, i.e. the 4 byte field is the sequence number itself. PROTOCOL_SPEC
 	// §2.3 lists both a <seq> and an extra zero field (24 bytes), which
 	// contradicts the length 0x14 stored in the frame; the capture wins.
-	want := mustHex(t, "0300001400000007005101801a51500b880f8c29")
+	want := mustHex(t, "0300001400000007005101801a51500b88000029")
 	if len(request) != len(want) {
 		t.Fatalf("len(request) = %d, want %d", len(request), len(want))
 	}
@@ -431,7 +431,7 @@ func TestFallbackPorts(t *testing.T) {
 			if test.spec.Port != test.wantPort {
 				t.Errorf("Port = %d, want %d", test.spec.Port, test.wantPort)
 			}
-			requests := test.spec.Build(adapterCtx{IP: net.IPv4(192, 168, 0, 163)})
+			requests := test.spec.Build(adapterCtx{IP: net.IPv4(192, 168, 99, 163)})
 			if len(requests) != test.wantCount {
 				t.Fatalf("len(requests) = %d, want %d", len(requests), test.wantCount)
 			}
@@ -446,12 +446,12 @@ func TestFallbackPorts(t *testing.T) {
 
 func TestFallbackParserUsesSourceIP(t *testing.T) {
 	parse := fallbackParser(ProtoName22222)
-	device, ok := parse([]byte{0xFF, 0xEE, 0xDD}, net.IPv4(192, 168, 127, 9))
+	device, ok := parse([]byte{0xFF, 0xEE, 0xDD}, net.IPv4(192, 168, 100, 9))
 	if !ok {
 		t.Fatal("fallback parser did not report the source IP")
 	}
-	if device.IP != "192.168.127.9" {
-		t.Errorf("IP = %q, want 192.168.127.9", device.IP)
+	if device.IP != "192.168.100.9" {
+		t.Errorf("IP = %q, want 192.168.100.9", device.IP)
 	}
 	if device.Protocol != ProtoName22222 {
 		t.Errorf("Protocol = %q, want %q", device.Protocol, ProtoName22222)
@@ -464,7 +464,7 @@ func TestFallbackParserDecodesKnownLayouts(t *testing.T) {
 	if !ok {
 		t.Fatal("fallback parser failed on a 0x81 frame")
 	}
-	if device.IP != "192.168.127.254" || device.Protocol != ProtoName29168 {
-		t.Errorf("device = %+v, want IP 192.168.127.254 over %s", device, ProtoName29168)
+	if device.IP != "192.168.100.254" || device.Protocol != ProtoName29168 {
+		t.Errorf("device = %+v, want IP 192.168.100.254 over %s", device, ProtoName29168)
 	}
 }

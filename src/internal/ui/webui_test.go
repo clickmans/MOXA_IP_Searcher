@@ -90,7 +90,7 @@ func TestIsWebAddress(t *testing.T) {
 		ip   string
 		want bool
 	}{
-		{"192.168.127.250", true},
+		{"192.168.100.250", true},
 		{"10.0.0.1", true},
 		{"1.1.1.1", true},
 		{" 192.168.1.5 ", true},
@@ -117,11 +117,11 @@ func TestDeviceWebURL(t *testing.T) {
 		scheme string
 		want   string
 	}{
-		{"192.168.127.253", "https", "https://192.168.127.253"},
-		{"192.168.127.253", "http", "http://192.168.127.253"},
-		{"192.168.127.253", "", "http://192.168.127.253"},
-		{"192.168.127.253", "ftp", "http://192.168.127.253"},
-		{" 192.168.127.250 ", "http", "http://192.168.127.250"},
+		{"192.168.100.253", "https", "https://192.168.100.253"},
+		{"192.168.100.253", "http", "http://192.168.100.253"},
+		{"192.168.100.253", "", "http://192.168.100.253"},
+		{"192.168.100.253", "ftp", "http://192.168.100.253"},
+		{" 192.168.100.250 ", "http", "http://192.168.100.250"},
 		{"", "http", ""},
 		{"0.0.0.0", "http", ""},
 		{"garbage", "https", ""},
@@ -161,7 +161,7 @@ func TestProbeWebScheme(t *testing.T) {
 				return false
 			}, func(string) bool { return true })
 
-			if got := probeWebScheme("192.168.127.253"); got != test.want {
+			if got := probeWebScheme("192.168.100.253"); got != test.want {
 				t.Fatalf("probeWebScheme = %q, want %q", got, test.want)
 			}
 		})
@@ -177,12 +177,12 @@ func TestDoubleClickOpensActivatedRow(t *testing.T) {
 		func(url string) bool { opened <- url; return true })
 
 	app := newWebTestApp(
-		discovery.Device{IP: "192.168.127.250", MAC: "00:90:E8:3C:F2:20"},
-		discovery.Device{IP: "192.168.127.253", MAC: "50:0B:88:0B:44:9F"},
+		discovery.Device{IP: "192.168.100.250", MAC: "00:90:E8:00:00:20"},
+		discovery.Device{IP: "192.168.100.253", MAC: "50:0B:88:00:01:9F"},
 	)
 	notifyDoubleClick(app, uintptr(app.hList), 1)
 
-	if url := waitURL(t, opened); url != "http://192.168.127.253" {
+	if url := waitURL(t, opened); url != "http://192.168.100.253" {
 		t.Fatalf("opened %q, want the second row", url)
 	}
 }
@@ -194,11 +194,11 @@ func TestDoubleClickPrefersHTTPS(t *testing.T) {
 		func(ip, port string) bool { return port == webHTTPSPort },
 		func(url string) bool { opened <- url; return true })
 
-	app := newWebTestApp(discovery.Device{IP: "192.168.127.3"})
+	app := newWebTestApp(discovery.Device{IP: "192.168.100.3"})
 	notifyDoubleClick(app, uintptr(app.hList), 0)
 
-	if url := waitURL(t, opened); url != "https://192.168.127.3" {
-		t.Fatalf("opened %q, want https://192.168.127.3", url)
+	if url := waitURL(t, opened); url != "https://192.168.100.3" {
+		t.Fatalf("opened %q, want https://192.168.100.3", url)
 	}
 }
 
@@ -210,7 +210,7 @@ func TestDoubleClickIgnoresForeignNotification(t *testing.T) {
 		func(string, string) bool { return true },
 		func(url string) bool { opened <- url; return true })
 
-	app := newWebTestApp(discovery.Device{IP: "192.168.127.250"})
+	app := newWebTestApp(discovery.Device{IP: "192.168.100.250"})
 	notifyDoubleClick(app, uintptr(app.hList)+0x10, 0)
 
 	select {
@@ -227,7 +227,7 @@ func TestDoubleClickIgnoresSingleClick(t *testing.T) {
 		func(string, string) bool { return true },
 		func(url string) bool { opened <- url; return true })
 
-	app := newWebTestApp(discovery.Device{IP: "192.168.127.250"})
+	app := newWebTestApp(discovery.Device{IP: "192.168.100.250"})
 	activation := NMITEMACTIVATE{
 		Header: NMHDR{HwndFrom: syscall.Handle(uintptr(app.hList)), Code: 0xFFFFFFFE}, // NM_CLICK == -2
 		IItem:  0,
@@ -267,7 +267,7 @@ func TestDoubleClickOutOfRange(t *testing.T) {
 		func(string, string) bool { return true },
 		func(url string) bool { opened <- url; return true })
 
-	app := newWebTestApp(discovery.Device{IP: "192.168.127.250"})
+	app := newWebTestApp(discovery.Device{IP: "192.168.100.250"})
 	notifyDoubleClick(app, uintptr(app.hList), 7)
 
 	select {
@@ -285,7 +285,7 @@ func TestDoubleClickWhileScanning(t *testing.T) {
 		func(string, string) bool { return true },
 		func(url string) bool { opened <- url; return true })
 
-	app := newWebTestApp(discovery.Device{IP: "192.168.127.250"})
+	app := newWebTestApp(discovery.Device{IP: "192.168.100.250"})
 	app.scanning = true
 	notifyDoubleClick(app, uintptr(app.hList), 0)
 
@@ -299,7 +299,7 @@ func TestDoubleClickWhileScanning(t *testing.T) {
 // TestWebNoticeIsShownOnce checks the asynchronous result is consumed by the
 // UI thread exactly once.
 func TestWebNoticeIsShownOnce(t *testing.T) {
-	app := &App{webNotice: "已在浏览器中打开 http://192.168.127.250"}
+	app := &App{webNotice: "已在浏览器中打开 http://192.168.100.250"}
 	app.onWebNotice()
 	if app.webNotice != "" {
 		t.Fatalf("webNotice = %q, want it cleared", app.webNotice)

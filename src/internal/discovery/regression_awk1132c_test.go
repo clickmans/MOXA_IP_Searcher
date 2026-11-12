@@ -8,26 +8,26 @@ import (
 // AWK-1132C regression fixtures (bug AWK-1132C: the device was discovered but
 // both the 产品型号 and the 固件版本 columns stayed empty).
 //
-// Device under test: IP 192.168.127.253, MAC 00:90:E8:E0:0F:D7,
-// 12 byte identity 3012198903770090e8e00fd7.
+// Device under test: IP 192.168.100.253, MAC 00:90:E8:00:00:D7,
+// 12 byte identity 3012198903770090e80000d7.
 const (
 	// fixtureWSUReplyAWK1132C is the real 234 byte UDP/5800 reply, taken
 	// verbatim from the capture file _analysis/wifi4_frames.txt (line 6). The
 	// frame differs from the documented AWK-1131A layout in two ways: the magic
 	// is 0x0DBF and it is 16 bytes longer.
-	fixtureWSUReplyAWK1132C = "0dbf0001000000c60004a768384314b1000000000090e8e00fd7246a0e1a4cfd" +
+	fixtureWSUReplyAWK1132C = "0dbf0001000000c60004a768384314b1000000000090e80000d7246a0e1a4cfd" +
 		"00000003000100c20001000100bc41574b2d31313332432d5553000000000000" +
-		"0000000000000000000000000000003139322e3136382e3132372e3235330030" +
-		"303a39303a45383a45303a30463a4437003235352e3235352e3235352e300000" +
+		"0000000000000000000000000000003139322e3136382e3130302e3235330030" +
+		"303a39303a45383a30303a30303a4437003235352e3235352e3235352e300000" +
 		"0000000000000000000000000000000000000000000000000000000000000000" +
-		"00000000000000000000000000000000003139322e3136382e3132372e313030" +
+		"00000000000000000000000000000000003139322e3136382e3130302e313030" +
 		"003cb631650df5ddce8e0d9690d83c1a8fbc3c41ef23d33d952f627230000000" +
 		"00000000000000000000"
 
 	// fixtureVersionReplyAWK1132C is the real 36 byte UDP/4800 0x16 answer of
 	// the same device: 20 byte header + tail
 	// 00 00 00 01 00 0d 0d 01 00 00 00 00 01 00 02 00.
-	fixtureVersionReplyAWK1132C = "96000024" + "00000001" + "3012198903770090e8e00fd7" +
+	fixtureVersionReplyAWK1132C = "96000024" + "00000001" + "3012198903770090e80000d7" +
 		"00000001000d0d010000000001000200"
 )
 
@@ -50,11 +50,11 @@ func TestParseWSUAWK1132CRealFrame(t *testing.T) {
 	if device.Model != "AWK-1132C-US" {
 		t.Errorf("Model = %q, want AWK-1132C-US", device.Model)
 	}
-	if device.IP != "192.168.127.253" {
-		t.Errorf("IP = %q, want 192.168.127.253", device.IP)
+	if device.IP != "192.168.100.253" {
+		t.Errorf("IP = %q, want 192.168.100.253", device.IP)
 	}
-	if device.MAC != "00:90:E8:E0:0F:D7" {
-		t.Errorf("MAC = %q, want 00:90:E8:E0:0F:D7", device.MAC)
+	if device.MAC != "00:90:E8:00:00:D7" {
+		t.Errorf("MAC = %q, want 00:90:E8:00:00:D7", device.MAC)
 	}
 	if device.Protocol != ProtoNameWSU {
 		t.Errorf("Protocol = %q, want %q", device.Protocol, ProtoNameWSU)
@@ -139,8 +139,8 @@ func TestParseWSUMismatchedLengthFallsBackToScan(t *testing.T) {
 	if !ok {
 		t.Fatal("ParseWSU rejected a frame that still carries an IP")
 	}
-	if device.IP != "192.168.127.253" {
-		t.Errorf("IP = %q, want 192.168.127.253 (recovered by scanning)", device.IP)
+	if device.IP != "192.168.100.253" {
+		t.Errorf("IP = %q, want 192.168.100.253 (recovered by scanning)", device.IP)
 	}
 	if device.Model != "" {
 		t.Errorf("Model = %q, want empty for an untrusted layout", device.Model)
@@ -165,7 +165,7 @@ func TestVersionFromTail4800AWK1132C(t *testing.T) {
 	if shortSerial != 0 {
 		t.Errorf("shortSerial = %d, want 0", shortSerial)
 	}
-	if got, want := hexString(deviceID), "3012198903770090e8e00fd7"; got != want {
+	if got, want := hexString(deviceID), "3012198903770090e80000d7"; got != want {
 		t.Errorf("deviceID = %s, want %s", got, want)
 	}
 }
@@ -210,19 +210,19 @@ func TestVersionFromTail4800StillRejectsInvalidValues(t *testing.T) {
 // real frame: while the fix was verified the device did not answer UDP/5800.
 func TestAWK1132COneRowWithModelAndFirmware(t *testing.T) {
 	aggregator := newAggregator()
-	ether := Adapter{Name: "以太网", IP: net.IPv4(192, 168, 127, 100)}
+	ether := Adapter{Name: "以太网", IP: net.IPv4(192, 168, 100, 100)}
 	ep4800 := &endpoint{adapter: ether, spec: protocol4800()}
 	epWSU := &endpoint{adapter: ether, spec: protocolWSU()}
-	sourceIP := net.IPv4(192, 168, 127, 253)
+	sourceIP := net.IPv4(192, 168, 100, 253)
 
 	// 0x81 discovery answer of the AWK (built from the captured 12 byte id and
 	// the captured address).
-	awkID := mustHexBytes("3012198903770090e8e00fd7")
+	awkID := mustHexBytes("3012198903770090e80000d7")
 	discovery := make([]byte, 24)
 	discovery[0] = replyHeader4800
 	discovery[3] = 24
 	copy(discovery[8:20], awkID)
-	copy(discovery[20:24], []byte{192, 168, 127, 253})
+	copy(discovery[20:24], []byte{192, 168, 100, 253})
 	handleReply(ep4800, discovery, sourceIP, aggregator)
 
 	otherDevices := []struct {
@@ -230,11 +230,11 @@ func TestAWK1132COneRowWithModelAndFirmware(t *testing.T) {
 		id  string
 	}{
 		{mac: "00:90:E8:12:34:56", id: "0031008012340090e812345600"},
-		{mac: "00:90:E8:0E:1B:53", id: "003100800e530090e80e1b5300"},
+		{mac: "00:90:E8:00:00:53", id: "003100800e530090e800005300"},
 	}
 	for _, other := range otherDevices {
 		aggregator.add(&Device{
-			IP:       "192.168.127.253",
+			IP:       "192.168.100.253",
 			MAC:      other.mac,
 			Protocol: ProtoName4800,
 			Adapters: []string{"以太网"},
@@ -249,14 +249,14 @@ func TestAWK1132COneRowWithModelAndFirmware(t *testing.T) {
 	if !ok {
 		t.Fatal("ParseWSU rejected the real AWK-1132C reply")
 	}
-	if !aggregator.setModel(awkID, "192.168.127.253", wsUser.Model) {
+	if !aggregator.setModel(awkID, "192.168.100.253", wsUser.Model) {
 		t.Fatal("setModel did not reach the AWK row")
 	}
 	versionID, version, shortSerial, ok := ParseVersionReply(mustHex(t, fixtureVersionReplyAWK1132C))
 	if !ok {
 		t.Fatal("ParseVersionReply rejected the real AWK-1132C answer")
 	}
-	if !aggregator.setVersion(versionID, "192.168.127.253", version, shortSerial) {
+	if !aggregator.setVersion(versionID, "192.168.100.253", version, shortSerial) {
 		t.Fatal("setVersion did not reach the AWK row")
 	}
 
@@ -266,7 +266,7 @@ func TestAWK1132COneRowWithModelAndFirmware(t *testing.T) {
 		byMAC[row.MAC] = row
 	}
 
-	awk, ok := byMAC["00:90:E8:E0:0F:D7"]
+	awk, ok := byMAC["00:90:E8:00:00:D7"]
 	if !ok {
 		t.Fatalf("the AWK row is missing, got %d rows: %+v", len(rows), rows)
 	}
@@ -276,15 +276,15 @@ func TestAWK1132COneRowWithModelAndFirmware(t *testing.T) {
 	if awk.Firmware != "V1.0" {
 		t.Errorf("AWK firmware = %q, want V1.0", awk.Firmware)
 	}
-	if awk.IP != "192.168.127.253" {
-		t.Errorf("AWK IP = %q, want 192.168.127.253", awk.IP)
+	if awk.IP != "192.168.100.253" {
+		t.Errorf("AWK IP = %q, want 192.168.100.253", awk.IP)
 	}
 	if len(awk.Adapters) != 1 || awk.Adapters[0] != "以太网" {
 		t.Errorf("AWK adapters = %v, want [以太网]", awk.Adapters)
 	}
 
 	// The two devices sharing the IP must stay separate rows.
-	for _, mac := range []string{"00:90:E8:12:34:56", "00:90:E8:0E:1B:53"} {
+	for _, mac := range []string{"00:90:E8:12:34:56", "00:90:E8:00:00:53"} {
 		other, ok := byMAC[mac]
 		if !ok {
 			t.Errorf("the row of %s was dropped", mac)

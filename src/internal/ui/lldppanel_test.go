@@ -50,13 +50,13 @@ func TestLLDPColumnTitles(t *testing.T) {
 func TestLLDPNeighborCells(t *testing.T) {
 	full := lldp.Neighbor{
 		Port:       4,
-		ChassisID:  "0090e8d65985",
+		ChassisID:  "0090e8000285",
 		PortID:     "7",
 		PortDesc:   "100FX,SC,Single,40.",
-		SystemName: "Managed Redundant Switch 49538",
+		SystemName: "Managed Redundant Switch 00003",
 	}
 	got := lldpNeighborCells(full)
-	want := []string{"4", "0090e8d65985", "7", "100FX,SC,Single,40.", "Managed Redundant Switch 49538"}
+	want := []string{"4", "0090e8000285", "7", "100FX,SC,Single,40.", "Managed Redundant Switch 00003"}
 	if len(got) != len(want) {
 		t.Fatalf("len(cells) = %d, want %d", len(got), len(want))
 	}
@@ -66,9 +66,9 @@ func TestLLDPNeighborCells(t *testing.T) {
 		}
 	}
 
-	// The port 2 neighbour of 192.168.127.4 has no description and no system
+	// The port 2 neighbour of 192.168.100.4 has no description and no system
 	// name; both must render as the "-" placeholder, not as an empty cell.
-	empty := lldpNeighborCells(lldp.Neighbor{Port: 2, ChassisID: "c85b76f2204a", PortID: "c85b76f2204a"})
+	empty := lldpNeighborCells(lldp.Neighbor{Port: 2, ChassisID: "c85b7600004a", PortID: "c85b7600004a"})
 	if empty[0] != "2" || empty[3] != "-" || empty[4] != "-" {
 		t.Errorf("cells = %v, want the empty columns as \"-\"", empty)
 	}
@@ -80,7 +80,7 @@ func TestLLDPSummary(t *testing.T) {
 	if got := lldpSummary(lldpStateIdle, "", nil, nil); got != "选中上方一台设备可查看它的 LLDP 邻居" {
 		t.Errorf("idle = %q", got)
 	}
-	if got := lldpSummary(lldpStateReading, "192.168.127.4", nil, nil); got != "正在读取 192.168.127.4 的 LLDP 邻居…" {
+	if got := lldpSummary(lldpStateReading, "192.168.100.4", nil, nil); got != "正在读取 192.168.100.4 的 LLDP 邻居…" {
 		t.Errorf("reading = %q", got)
 	}
 	if got := lldpSummary(lldpStateNoSNMP, "", nil, lldp.ErrNoSNMP); got != "该设备未响应 SNMP（community=public），无法读取 LLDP" {
@@ -92,20 +92,20 @@ func TestLLDPSummary(t *testing.T) {
 	}
 
 	table := &lldp.Table{
-		ChassisID:  "0090e80005d0",
-		SystemName: "Managed Redundant Switch 00007",
+		ChassisID:  "0090e80000d0",
+		SystemName: "Managed Redundant Switch 00001",
 		SystemDesc: "EOM-106",
 		Neighbors:  make([]lldp.Neighbor, 4),
 	}
 	// The success line is fixed by the specification: three fields, separated by
 	// full width spaces, nothing else. Compared as a whole string on purpose.
 	ready := lldpSummary(lldpStateReady, "", table, nil)
-	const wantReady = "机箱 ID：0090e80005d0　系统名：Managed Redundant Switch 00007　描述：EOM-106"
+	const wantReady = "机箱 ID：0090e80000d0　系统名：Managed Redundant Switch 00001　描述：EOM-106"
 	if ready != wantReady {
 		t.Errorf("ready = %q, want %q", ready, wantReady)
 	}
 
-	emptyTable := &lldp.Table{ChassisID: "0090e80005d0"}
+	emptyTable := &lldp.Table{ChassisID: "0090e80000d0"}
 	emptyText := lldpSummary(lldpStateReady, "", emptyTable, nil)
 	if !strings.Contains(emptyText, "该设备没有 LLDP 邻居") {
 		t.Errorf("empty table summary = %q", emptyText)
@@ -226,7 +226,7 @@ func TestLLDPPanelDropsStaleGeneration(t *testing.T) {
 	}
 
 	panel.pendingGeneration = 5
-	panel.pendingTable = &lldp.Table{ChassisID: "0090e80005d0"}
+	panel.pendingTable = &lldp.Table{ChassisID: "0090e80000d0"}
 	panel.onResult()
 	if panel.reading {
 		t.Fatal("the result of the current generation must end the read")
@@ -252,7 +252,7 @@ func TestLLDPPanelNilSafety(t *testing.T) {
 // TestLLDPPanelIgnoresScanningSelection documents the "no read while scanning"
 // rule without a window: the guard must be the first thing the handler checks.
 func TestLLDPPanelIgnoresScanningSelection(t *testing.T) {
-	app := &App{scanning: true, devices: []discovery.Device{{IP: "192.168.127.4"}}}
+	app := &App{scanning: true, devices: []discovery.Device{{IP: "192.168.100.4"}}}
 	panel := &lldpPanel{app: app, selectedRow: -1}
 	panel.onSelectionChanged(0)
 	if panel.selectedRow != -1 {
@@ -266,7 +266,7 @@ func TestLLDPPanelIgnoresScanningSelection(t *testing.T) {
 // TestLLDPPanelKeepsSameRowSelection covers "reading A then A again": a repeated
 // notification for the row the panel already describes starts no second read.
 func TestLLDPPanelKeepsSameRowSelection(t *testing.T) {
-	app := &App{devices: []discovery.Device{{IP: "192.168.127.4"}}}
+	app := &App{devices: []discovery.Device{{IP: "192.168.100.4"}}}
 	panel := &lldpPanel{app: app, selectedRow: 0, generation: 7, reading: true}
 	panel.onSelectionChanged(0)
 	if panel.generation != 7 {

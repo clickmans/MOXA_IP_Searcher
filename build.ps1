@@ -22,7 +22,7 @@ $env:GOOS = 'windows'
 $env:GOARCH = 'amd64'
 
 # 优先使用固定安装路径，找不到再退回 PATH 里的 go
-$go = 'C:\Program Files\Go\bin\go.exe'
+$go = "$env:ProgramFiles\Go\bin\go.exe"
 if (-not (Test-Path $go)) { $go = 'go' }
 
 Write-Host "==> 编译器: $go" -ForegroundColor Cyan

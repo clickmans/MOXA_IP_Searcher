@@ -110,7 +110,7 @@ func compareOrdered(left, right string) int {
 }
 
 // compareIP orders two addresses numerically, not lexicographically:
-// 192.168.127.9 must come before 192.168.127.10.
+// 192.168.100.9 must come before 192.168.100.10.
 //
 // Addresses that are not IPv4 are ordered after the IPv4 ones (they cannot be
 // compared numerically with them) and among themselves by text.

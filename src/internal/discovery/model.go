@@ -176,8 +176,8 @@ func (d *Device) merge(other *Device) {
 // 4800 devices that do not answer the 0x03 model query still publish a name
 // through 0x10, and that name is a product code plus a serial suffix:
 //
-//	NP6450_5599      -> NPort 6450
-//	MG-MB3180_579    -> MGate MB3180
+//	NP6450_0001      -> NPort 6450
+//	MG-MB3180_0001    -> MGate MB3180
 //	NP5110A          -> NPort 5110A
 //	EDS-510E_1234    -> EDS-510E      (unknown prefix: returned unchanged)
 //
@@ -208,7 +208,7 @@ func ModelFromName(name string) string {
 }
 
 // stripDeviceNameSuffix removes the trailing "_<digits>" serial suffix of a
-// device name, e.g. "NP6450_5599" -> "NP6450".
+// device name, e.g. "NP6450_0001" -> "NP6450".
 //
 // Only a purely numeric suffix is removed, so a name such as "MG-MB3180" or
 // "switch_A" keeps its underscore.
@@ -786,8 +786,8 @@ func NormalizeMAC(b []byte) string {
 	return mac
 }
 
-// ParseMACString normalizes a textual MAC address ("50:0B:88:0E:1B:53",
-// "50-0b-88-0e-1b-53", ...). It returns "" when the input is not a MAC.
+// ParseMACString normalizes a textual MAC address ("50:0B:88:00:00:53",
+// "50-0b-88-00-00-53", ...). It returns "" when the input is not a MAC.
 func ParseMACString(s string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {

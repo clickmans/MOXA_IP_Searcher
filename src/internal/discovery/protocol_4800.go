@@ -36,7 +36,7 @@ const (
 const (
 	// cmd4800Model asks for the property list ("Model\t<value>\n", ...).
 	cmd4800Model = 0x03
-	// cmd4800Name asks for the plain device name, e.g. "NP6450_5599".
+	// cmd4800Name asks for the plain device name, e.g. "NP6450_0001".
 	cmd4800Name = 0x10
 	// cmd4800Version asks for the 36 byte version answer.
 	cmd4800Version = 0x16
@@ -222,7 +222,7 @@ func ParseModelReplyFull(payload []byte) (deviceID []byte, model, firmware strin
 //
 // The name is the first NUL terminated ASCII string after the 20 byte header:
 //
-//	90 00 00 xx <seq:4B> <deviceID:12B> "NP6450_5599" 00 ...
+//	90 00 00 xx <seq:4B> <deviceID:12B> "NP6450_0001" 00 ...
 //
 // ok is false for a "no data" answer or an empty name.
 func ParseNameReply(payload []byte) (deviceID []byte, name string, ok bool) {

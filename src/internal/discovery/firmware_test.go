@@ -41,8 +41,8 @@ func buildAXOMReply(tlvs []axomReplyTLV) []byte {
 // are decoded into the struct without being displayed.
 func TestParseAXOMFirmware(t *testing.T) {
 	frame := buildAXOMReply([]axomReplyTLV{
-		{typ: axomTypeIP, value: []byte{192, 168, 127, 3}},
-		{typ: axomTypeMAC, value: []byte{0x50, 0x0B, 0x88, 0x0E, 0x1B, 0x53}},
+		{typ: axomTypeIP, value: []byte{192, 168, 100, 3}},
+		{typ: axomTypeMAC, value: []byte{0x50, 0x0B, 0x88, 0x00, 0x00, 0x53}},
 		{typ: axomTypeName, value: append([]byte("eom-106"), 0, 0)},
 		// "V3.1.10 build 26102915\n" - the exact capture confirmed on hardware.
 		{typ: axomTypeFirmware, value: []byte("56332e312e3130206275696c642032363130323931350a")},
@@ -61,8 +61,8 @@ func TestParseAXOMFirmware(t *testing.T) {
 	if device.Name != "eom-106" {
 		t.Errorf("Name = %q, want eom-106", device.Name)
 	}
-	if device.IP != "192.168.127.3" {
-		t.Errorf("IP = %q, want 192.168.127.3", device.IP)
+	if device.IP != "192.168.100.3" {
+		t.Errorf("IP = %q, want 192.168.100.3", device.IP)
 	}
 	if device.Serial != "SN12345678" {
 		t.Errorf("Serial = %q, want SN12345678", device.Serial)
@@ -75,19 +75,19 @@ func TestParseAXOMFirmware(t *testing.T) {
 	}
 }
 
-// axomRealCapture is a verbatim EOM-106 reply captured from 192.168.127.4 with
+// axomRealCapture is a verbatim EOM-106 reply captured from 192.168.100.4 with
 // _analysis/ui_v11/probe_axom.py. The firmware TLV value is PLAIN ASCII here
 // (`56 33 2e 31 2e 31 30 ...` reads "V3.1.10 build 26102915\n"), while the
 // specification described it as hex encoded - both encodings must work.
 const axomRealCapture = "41584f4d20010000000801011801000000000001100000000000000000000000" +
 	"0000000000000000320000010c0000004d4f5841524453414d504c4533000001060000" +
-	"000090e80005d000003400000107000000454f4d2d3130360031000001040000008600" +
-	"00001000000104000000c0a87f041100000104000000ffffff00120000010400000000" +
+	"000090e80000d000003400000107000000454f4d2d3130360031000001040000008600" +
+	"00001000000104000000c0a864041100000104000000ffffff00120000010400000000" +
 	"0000001300000104000000000000001310000104000000000000003600100017000000" +
 	"56332e312e3130206275696c642032363130323931350a00370000011e0000004d616e" +
-	"6167656420526564756e64616e74205377697463682030303030370000380000010f00" +
+	"6167656420526564756e64616e74205377697463682030303030310000380000010f00" +
 	"0000537769746368204c6f636174696f6e003a00000101000000040000003900000104" +
-	"000000c0a800a33b00000102000000bb010000"
+	"000000c0a863a33b00000102000000bb010000"
 
 // TestParseAXOMRealCaptureFirmware decodes the real device answer end to end.
 func TestParseAXOMRealCaptureFirmware(t *testing.T) {
@@ -98,11 +98,11 @@ func TestParseAXOMRealCaptureFirmware(t *testing.T) {
 	if device.Firmware != "V3.1.10 build 26102915" {
 		t.Errorf("Firmware = %q, want %q", device.Firmware, "V3.1.10 build 26102915")
 	}
-	if device.IP != "192.168.127.4" {
-		t.Errorf("IP = %q, want 192.168.127.4", device.IP)
+	if device.IP != "192.168.100.4" {
+		t.Errorf("IP = %q, want 192.168.100.4", device.IP)
 	}
-	if device.MAC != "00:90:E8:00:05:D0" {
-		t.Errorf("MAC = %q, want 00:90:E8:00:05:D0", device.MAC)
+	if device.MAC != "00:90:E8:00:00:D0" {
+		t.Errorf("MAC = %q, want 00:90:E8:00:00:D0", device.MAC)
 	}
 	if device.Name != "EOM-106" {
 		t.Errorf("Name = %q, want EOM-106", device.Name)
@@ -110,7 +110,7 @@ func TestParseAXOMRealCaptureFirmware(t *testing.T) {
 	if device.Serial != "MOXARDSAMPLE" {
 		t.Errorf("Serial = %q, want MOXARDSAMPLE", device.Serial)
 	}
-	if device.Description != "Managed Redundant Switch 00007" {
+	if device.Description != "Managed Redundant Switch 00001" {
 		t.Errorf("Description = %q", device.Description)
 	}
 	if device.Location != "Switch Location" {
@@ -210,7 +210,7 @@ func TestDecodeAXOMHexTextFromInvalidVendor(t *testing.T) {
 // key is used when the product reports it (MGate / NPort firmware does not, in
 // which case the field stays empty and no extra request is sent).
 func TestParse4800Firmware(t *testing.T) {
-	deviceID := mustHex(t, "005101801a51500b880f8c29")
+	deviceID := mustHex(t, "005101801a51500b88000029")
 	payload := make([]byte, 20)
 	payload[0] = replyHeader4800Model
 	copy(payload[8:20], deviceID)
@@ -259,7 +259,7 @@ func TestParsersWithoutFirmwareField(t *testing.T) {
 		t.Errorf("4800 Firmware = %q, want empty", from4800.Firmware)
 	}
 
-	from4000, ok := Parse4000(mustHex(t, fixture4000Reply64), net.IPv4(192, 168, 127, 3))
+	from4000, ok := Parse4000(mustHex(t, fixture4000Reply64), net.IPv4(192, 168, 100, 3))
 	if !ok {
 		t.Fatal("Parse4000 rejected the reference fixture")
 	}
@@ -267,7 +267,7 @@ func TestParsersWithoutFirmwareField(t *testing.T) {
 		t.Errorf("4000 Firmware = %q, want empty", from4000.Firmware)
 	}
 
-	fromWSU, ok := ParseWSU(buildWSUReply("AWK-1131A-US", "192.168.127.253", "50:0B:88:09:2B:DC", "255.255.255.0", "192.168.127.100"))
+	fromWSU, ok := ParseWSU(buildWSUReply("AWK-1131A-US", "192.168.100.253", "50:0B:88:00:00:DC", "255.255.255.0", "192.168.100.100"))
 	if !ok {
 		t.Fatal("ParseWSU rejected the synthesized fixture")
 	}
@@ -281,12 +281,12 @@ func TestParsersWithoutFirmwareField(t *testing.T) {
 func TestAggregatorSetFirmware(t *testing.T) {
 	aggregator := newAggregator()
 	deviceID := make([]byte, 12)
-	copy(deviceID, []byte{0x00, 0x26, 0x00, 0x80, 0x52, 0x26, 0x50, 0x0B, 0x88, 0x10, 0x23, 0x89})
-	for _, ip := range []string{"192.168.127.254", "192.168.127.253"} {
-		aggregator.add(&Device{IP: ip, MAC: "50:0B:88:10:23:89", Protocol: ProtoName4800, Adapters: []string{"WLAN"}, deviceID: deviceID})
+	copy(deviceID, []byte{0x00, 0x26, 0x00, 0x80, 0x52, 0x26, 0x50, 0x0B, 0x88, 0x00, 0x00, 0x89})
+	for _, ip := range []string{"192.168.100.254", "192.168.100.253"} {
+		aggregator.add(&Device{IP: ip, MAC: "50:0B:88:00:00:89", Protocol: ProtoName4800, Adapters: []string{"WLAN"}, deviceID: deviceID})
 	}
 
-	if !aggregator.setFirmware(deviceID, "192.168.127.254", "V2.5 build 210915") {
+	if !aggregator.setFirmware(deviceID, "192.168.100.254", "V2.5 build 210915") {
 		t.Fatal("setFirmware did not match the stored device id")
 	}
 	for _, device := range aggregator.snapshot() {
@@ -303,8 +303,8 @@ func TestAggregatorSetFirmware(t *testing.T) {
 // device never wipes an already known firmware string.
 func TestMergeKeepsFirmware(t *testing.T) {
 	aggregator := newAggregator()
-	aggregator.add(&Device{IP: "192.168.127.3", MAC: "50:0B:88:0E:1B:53", Protocol: ProtoName4800, Firmware: "V3.1.10 build 26102915", Adapters: []string{"WLAN"}})
-	aggregator.add(&Device{IP: "192.168.127.3", MAC: "50:0B:88:0E:1B:53", Protocol: ProtoNameAXOM, Name: "eom-106", Adapters: []string{"WLAN"}})
+	aggregator.add(&Device{IP: "192.168.100.3", MAC: "50:0B:88:00:00:53", Protocol: ProtoName4800, Firmware: "V3.1.10 build 26102915", Adapters: []string{"WLAN"}})
+	aggregator.add(&Device{IP: "192.168.100.3", MAC: "50:0B:88:00:00:53", Protocol: ProtoNameAXOM, Name: "eom-106", Adapters: []string{"WLAN"}})
 
 	devices := aggregator.snapshot()
 	if len(devices) != 1 {
@@ -335,7 +335,7 @@ func TestDeviceStats(t *testing.T) {
 		{
 			name: "one device one address",
 			devices: []Device{
-				{IP: "192.168.127.253", MAC: "50:0B:88:09:2B:DC"},
+				{IP: "192.168.100.253", MAC: "50:0B:88:00:00:DC"},
 			},
 			wantCount: 1,
 			wantDup:   0,
@@ -343,8 +343,8 @@ func TestDeviceStats(t *testing.T) {
 		{
 			name: "one device two addresses counts once",
 			devices: []Device{
-				{IP: "192.168.127.254", MAC: "50:0B:88:10:23:89"},
-				{IP: "192.168.127.253", MAC: "50:0B:88:10:23:89"},
+				{IP: "192.168.100.254", MAC: "50:0B:88:00:00:89"},
+				{IP: "192.168.100.253", MAC: "50:0B:88:00:00:89"},
 			},
 			wantCount: 1,
 			wantDup:   0,
@@ -352,9 +352,9 @@ func TestDeviceStats(t *testing.T) {
 		{
 			name: "two devices sharing one IP",
 			devices: []Device{
-				{IP: "192.168.127.253", MAC: "50:0B:88:09:2B:DC"},
-				{IP: "192.168.127.253", MAC: "00:90:E8:00:05:D0"},
-				{IP: "192.168.127.254", MAC: "50:0B:88:0F:8C:29"},
+				{IP: "192.168.100.253", MAC: "50:0B:88:00:00:DC"},
+				{IP: "192.168.100.253", MAC: "00:90:E8:00:00:D0"},
+				{IP: "192.168.100.254", MAC: "50:0B:88:00:00:29"},
 			},
 			wantCount: 3,
 			wantDup:   2,
@@ -362,8 +362,8 @@ func TestDeviceStats(t *testing.T) {
 		{
 			name: "rows without MAC each count as one device",
 			devices: []Device{
-				{IP: "192.168.127.10", Protocol: ProtoName29168},
-				{IP: "192.168.127.10", Protocol: ProtoName1029},
+				{IP: "192.168.100.10", Protocol: ProtoName29168},
+				{IP: "192.168.100.10", Protocol: ProtoName1029},
 			},
 			wantCount: 2,
 			wantDup:   2,

@@ -20,7 +20,7 @@ var (
 // which is the only non trivial Win32 code behind the Ctrl+C feature: it
 // allocates an HGLOBAL, copies UTF-16 into it and hands it to the clipboard.
 func TestSetClipboardTextRoundTrip(t *testing.T) {
-	const want = "1\t192.168.127.253\t50:0B:88:09:2B:DC\tAWK-1161A\tawk-1161a\tAXOM/40404\tWLAN\r\n"
+	const want = "1\t192.168.100.253\t50:0B:88:00:00:DC\tAWK-1161A\tawk-1161a\tAXOM/40404\tWLAN\r\n"
 
 	if !setClipboardText(0, want) {
 		t.Skip("clipboard is not accessible in this session")
@@ -125,8 +125,8 @@ func TestRowCells(t *testing.T) {
 			name:  "full row",
 			index: 3,
 			device: discovery.Device{
-				IP:       "192.168.127.3",
-				MAC:      "50:0B:88:0E:1B:53",
+				IP:       "192.168.100.3",
+				MAC:      "50:0B:88:00:00:53",
 				Model:    "AWK-1161C",
 				Name:     "awk-1161c",
 				Firmware: "V3.1.10 build 26102915",
@@ -134,7 +134,7 @@ func TestRowCells(t *testing.T) {
 				Adapters: []string{"WLAN"},
 			},
 			want: []string{
-				"4", "AWK-1161C", "192.168.127.3", "50:0B:88:0E:1B:53",
+				"4", "AWK-1161C", "192.168.100.3", "50:0B:88:00:00:53",
 				"V3.1.10 build 26102915", "awk-1161c", "WLAN",
 			},
 		},
@@ -144,24 +144,24 @@ func TestRowCells(t *testing.T) {
 			// string is not printed twice.
 			name: "model falls back to name",
 			device: discovery.Device{
-				IP:       "192.168.0.163",
-				MAC:      "00:90:E8:00:05:D0",
+				IP:       "192.168.99.163",
+				MAC:      "00:90:E8:00:00:D0",
 				Name:     "EOM-106",
 				Protocol: "EDS/4000",
 				Adapters: []string{"WLAN", "VMnet1"},
 			},
-			want: []string{"1", "EOM-106", "192.168.0.163", "00:90:E8:00:05:D0", "-", "-", "WLAN, VMnet1"},
+			want: []string{"1", "EOM-106", "192.168.99.163", "00:90:E8:00:00:D0", "-", "-", "WLAN, VMnet1"},
 		},
 		{
 			name: "name equal to model is hidden",
 			device: discovery.Device{
-				IP:       "192.168.127.4",
+				IP:       "192.168.100.4",
 				Model:    "MGate MB3180",
 				Name:     "MGate MB3180",
 				Protocol: "MOXA/4800",
 				Adapters: []string{"WLAN"},
 			},
-			want: []string{"1", "MGate MB3180", "192.168.127.4", "-", "-", "-", "WLAN"},
+			want: []string{"1", "MGate MB3180", "192.168.100.4", "-", "-", "-", "WLAN"},
 		},
 	}
 	for _, test := range tests {
@@ -209,31 +209,31 @@ func TestModelAndNameCell(t *testing.T) {
 func TestStatusText(t *testing.T) {
 	// Two devices share one IP: 3 devices on 2 addresses.
 	sharedIP := &discovery.Result{Devices: []discovery.Device{
-		{IP: "192.168.127.253", MAC: "50:0B:88:09:2B:DC"},
-		{IP: "192.168.127.253", MAC: "00:90:E8:00:05:D0"},
-		{IP: "192.168.127.254", MAC: "50:0B:88:0F:8C:29"},
+		{IP: "192.168.100.253", MAC: "50:0B:88:00:00:DC"},
+		{IP: "192.168.100.253", MAC: "00:90:E8:00:00:D0"},
+		{IP: "192.168.100.254", MAC: "50:0B:88:00:00:29"},
 	}}
 	if got := statusText(sharedIP); got != "搜索到 3 台设备（2 台设备 IP 重复）" {
 		t.Errorf("statusText = %q", got)
 	}
 	single := &discovery.Result{Devices: []discovery.Device{
-		{IP: "10.0.0.1", MAC: "50:0B:88:09:2B:DC"},
+		{IP: "10.0.0.1", MAC: "50:0B:88:00:00:DC"},
 	}}
 	if got := statusText(single); got != "搜索到 1 台设备" {
 		t.Errorf("statusText = %q", got)
 	}
 	// One device, two IPs: two rows, but only one device.
 	twoAddresses := &discovery.Result{Devices: []discovery.Device{
-		{IP: "192.168.127.254", MAC: "50:0B:88:10:23:89"},
-		{IP: "192.168.127.253", MAC: "50:0B:88:10:23:89"},
+		{IP: "192.168.100.254", MAC: "50:0B:88:00:00:89"},
+		{IP: "192.168.100.253", MAC: "50:0B:88:00:00:89"},
 	}}
 	if got := statusText(twoAddresses); got != "搜索到 1 台设备" {
 		t.Errorf("statusText = %q", got)
 	}
 	// Rows without a MAC each count as one device of their own.
 	withoutMAC := &discovery.Result{Devices: []discovery.Device{
-		{IP: "192.168.127.10", Protocol: "MOXA/29168"},
-		{IP: "192.168.127.10", Protocol: "NPort/1029"},
+		{IP: "192.168.100.10", Protocol: "MOXA/29168"},
+		{IP: "192.168.100.10", Protocol: "NPort/1029"},
 	}}
 	if got := statusText(withoutMAC); got != "搜索到 2 台设备（2 台设备 IP 重复）" {
 		t.Errorf("statusText = %q", got)

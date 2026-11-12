@@ -11,19 +11,19 @@ import (
 // but its reply was dropped by the magic word check, and the 0x16 answer it
 // does send was rejected as an impossible version).
 //
-// Device under test: IP 192.168.127.253, MAC 00:90:E8:EE:1C:4E,
-// 12 byte identity 3012198902770090e8ee1c4e, firmware V1.11.
+// Device under test: IP 192.168.100.253, MAC 00:90:E8:00:00:4E,
+// 12 byte identity 3012198902770090e800004e, firmware V1.11.
 const (
 	// fixtureWSUReplyAWK1137C is the real 234 byte UDP/5800 reply, taken
 	// verbatim from the capture file _analysis/wifi_frames.txt (lines 9-10).
 	// Its magic is 0x1DBF, i.e. the high byte is 0x1D and not 0x0D, which is
 	// what the old isWSUMagic rejected.
-	fixtureWSUReplyAWK1137C = "1dbf0001000000c600013498384313cf000000000090e8ee1c4e246a0e1a4cfd" +
+	fixtureWSUReplyAWK1137C = "1dbf0001000000c600013498384313cf000000000090e800004e246a0e1a4cfd" +
 		"00000003000100c20001000100bc41574b2d31313337432d4555000000000000" +
-		"0000000000000000000000000000003139322e3136382e3132372e3235330030" +
-		"303a39303a45383a45453a31433a3445003235352e3235352e3235352e300000" +
+		"0000000000000000000000000000003139322e3136382e3130302e3235330030" +
+		"303a39303a45383a30303a30303a3445003235352e3235352e3235352e300000" +
 		"0000000000000000000000000000000000000000000000000000000000000000" +
-		"00000000000000000000000000000000003139322e3136382e3132372e313030" +
+		"00000000000000000000000000000000003139322e3136382e3130302e313030" +
 		"00884796b9c85c8095ffdc8c5d3a2283e82bb80f1fd07a4e6839627230000000" +
 		"00000000000000000000"
 
@@ -31,13 +31,13 @@ const (
 	// the same device: 20 byte header + tail
 	// 00 00 0b 01 00 0d 09 01 00 00 00 00 01 00 02 00, i.e. minor 0x0b and
 	// major 0x01, which renders as V1.11.
-	fixtureVersionReplyAWK1137C = "96000024" + "00000300" + "3012198902770090e8ee1c4e" +
+	fixtureVersionReplyAWK1137C = "96000024" + "00000300" + "3012198902770090e800004e" +
 		"00000b01000d09010000000001000200"
 
 	// awkWSUAnswerIP is the device address carried by the captured frame.
-	awkWSUAnswerIP = "192.168.127.253"
+	awkWSUAnswerIP = "192.168.100.253"
 	// awkWSUMAC is the MAC carried by the captured frame.
-	awkWSUMAC = "00:90:E8:EE:1C:4E"
+	awkWSUMAC = "00:90:E8:00:00:4E"
 )
 
 // TestIsWSUMagicAWK1137CFamily pins the widened magic table: both observed
@@ -126,7 +126,7 @@ func TestParseVersionReplyAWK1137C(t *testing.T) {
 	if shortSerial != 0 {
 		t.Errorf("shortSerial = %d, want 0", shortSerial)
 	}
-	if got, want := hexString(deviceID), "3012198902770090e8ee1c4e"; got != want {
+	if got, want := hexString(deviceID), "3012198902770090e800004e"; got != want {
 		t.Errorf("deviceID = %s, want %s", got, want)
 	}
 }
@@ -206,7 +206,7 @@ func TestMinorFromTail4800(t *testing.T) {
 // reporting the firmware V1.11 of the AWK-1137C.
 func TestSameAddressDeviceIsNotMislabeledAfterMerge(t *testing.T) {
 	aggregator := newAggregator()
-	awkID := mustHexBytes("3012198902770090e8ee1c4e")
+	awkID := mustHexBytes("3012198902770090e800004e")
 
 	// 1. The WSU reply of the AWK-1137C arrives first: a row without identity.
 	aggregator.add(&Device{
@@ -219,7 +219,7 @@ func TestSameAddressDeviceIsNotMislabeledAfterMerge(t *testing.T) {
 	// 2. The other wireless device of the same address (no 4800 answer at all).
 	aggregator.add(&Device{
 		IP:       awkWSUAnswerIP,
-		MAC:      "50:0B:88:0B:44:9F",
+		MAC:      "50:0B:88:00:01:9F",
 		Model:    "AWK-1131A-EU",
 		Protocol: ProtoNameWSU,
 	})
@@ -244,10 +244,10 @@ func TestSameAddressDeviceIsNotMislabeledAfterMerge(t *testing.T) {
 	if got := byMAC[awkWSUMAC].Firmware; got != "V1.11" {
 		t.Errorf("AWK-1137C firmware = %q, want V1.11", got)
 	}
-	if got := byMAC["50:0B:88:0B:44:9F"].Firmware; got != "" {
+	if got := byMAC["50:0B:88:00:01:9F"].Firmware; got != "" {
 		t.Errorf("AWK-1131A firmware = %q, want empty (it never answers 0x16)", got)
 	}
-	if got := byMAC["50:0B:88:0B:44:9F"].Model; got != "AWK-1131A-EU" {
+	if got := byMAC["50:0B:88:00:01:9F"].Model; got != "AWK-1131A-EU" {
 		t.Errorf("AWK-1131A model = %q, want AWK-1131A-EU", got)
 	}
 }
@@ -327,7 +327,7 @@ func loopbackIndex() int {
 // Only the address field of the captured WSU frame is rewritten (the mock
 // device has to answer on the loopback), every other byte is the captured one.
 func TestAWK1137CEndToEnd(t *testing.T) {
-	awkID := mustHexBytes("3012198902770090e8ee1c4e")
+	awkID := mustHexBytes("3012198902770090e800004e")
 	deviceIP := net.IPv4(127, 0, 0, 1)
 	versionPayload := mustHex(t, fixtureVersionReplyAWK1137C)
 	stop := startFakeAWK1137C(t, versionPayload[queryLen4800:])

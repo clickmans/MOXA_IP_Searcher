@@ -140,8 +140,8 @@ func (v snmpValue) isEmpty() bool {
 //
 // An OCTET STRING is printed as text only when every byte is printable ASCII,
 // otherwise as lower case hex on one line - which is what turns the six raw
-// bytes 00 90 E8 D6 59 85 into the "0090e8d65985" that MXConfig displays for a
-// MAC based chassis id, while "Managed Redundant Switch 00007" stays text.
+// bytes 00 90 E8 D6 59 85 into the "0090e8000285" that MXConfig displays for a
+// MAC based chassis id, while "Managed Redundant Switch 00001" stays text.
 func (v snmpValue) String() string {
 	switch v.tag {
 	case tagInteger:

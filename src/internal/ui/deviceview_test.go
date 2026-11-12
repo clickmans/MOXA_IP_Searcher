@@ -15,11 +15,11 @@ import (
 // whose model could not be resolved.
 func sortFixtures() []discovery.Device {
 	return []discovery.Device{
-		{IP: "192.168.127.10", MAC: "50:0B:88:00:00:03", Model: "EDS-G4012", Adapters: []string{"WLAN"}},
-		{IP: "192.168.127.9", MAC: "50:0B:88:00:00:02", Model: "AWK-1161C", Adapters: []string{"以太网"}},
-		{IP: "192.168.127.9", MAC: "50:0B:88:00:00:01", Model: "AWK-1161C", Adapters: []string{"以太网", "WLAN"}},
-		{IP: "192.168.127.2", MAC: "50:0B:88:00:00:04", Model: "AWK-1161C", Adapters: []string{"WLAN"}},
-		{IP: "192.168.127.1", MAC: "50:0B:88:00:00:05", Adapters: []string{"WLAN"}},
+		{IP: "192.168.100.10", MAC: "50:0B:88:00:00:03", Model: "EDS-G4012", Adapters: []string{"WLAN"}},
+		{IP: "192.168.100.9", MAC: "50:0B:88:00:00:02", Model: "AWK-1161C", Adapters: []string{"以太网"}},
+		{IP: "192.168.100.9", MAC: "50:0B:88:00:00:01", Model: "AWK-1161C", Adapters: []string{"以太网", "WLAN"}},
+		{IP: "192.168.100.2", MAC: "50:0B:88:00:00:04", Model: "AWK-1161C", Adapters: []string{"WLAN"}},
+		{IP: "192.168.100.1", MAC: "50:0B:88:00:00:05", Adapters: []string{"WLAN"}},
 	}
 }
 
@@ -121,14 +121,14 @@ func TestCompareIP(t *testing.T) {
 		left, right string
 		want        int
 	}{
-		{"192.168.127.9", "192.168.127.10", -1},
-		{"192.168.127.10", "192.168.127.9", 1},
+		{"192.168.100.9", "192.168.100.10", -1},
+		{"192.168.100.10", "192.168.100.9", 1},
 		{"10.0.0.1", "10.0.0.1", 0},
 		{"192.168.0.2", "192.168.0.10", -1},
 		{"255.255.255.255", "0.0.0.0", 1},
 		// Not an IPv4 address: ordered after every IPv4 one.
-		{"fe80::1", "192.168.127.1", 1},
-		{"192.168.127.1", "fe80::1", -1},
+		{"fe80::1", "192.168.100.1", 1},
+		{"192.168.100.1", "fe80::1", -1},
 	}
 	for _, test := range cases {
 		if got := compareIP(test.left, test.right); got != test.want {
@@ -142,11 +142,11 @@ func TestCompareIP(t *testing.T) {
 func TestVisibleDevicesSortByModel(t *testing.T) {
 	ascending := visibleDevices(sortFixtures(), nil, sortState{field: sortModel, ascending: true})
 	want := []string{
-		"192.168.127.2 50:0B:88:00:00:04",  // AWK-1161C, lowest address
-		"192.168.127.9 50:0B:88:00:00:01",  // AWK-1161C, same address -> MAC
-		"192.168.127.9 50:0B:88:00:00:02",  // AWK-1161C, same address, higher MAC
-		"192.168.127.10 50:0B:88:00:00:03", // EDS-G4012
-		"192.168.127.1 50:0B:88:00:00:05",  // model unknown -> always last
+		"192.168.100.2 50:0B:88:00:00:04",  // AWK-1161C, lowest address
+		"192.168.100.9 50:0B:88:00:00:01",  // AWK-1161C, same address -> MAC
+		"192.168.100.9 50:0B:88:00:00:02",  // AWK-1161C, same address, higher MAC
+		"192.168.100.10 50:0B:88:00:00:03", // EDS-G4012
+		"192.168.100.1 50:0B:88:00:00:05",  // model unknown -> always last
 	}
 	if got := rowKeys(ascending); strings.Join(got, "|") != strings.Join(want, "|") {
 		t.Fatalf("model ascending =\n  %v\nwant\n  %v", got, want)
@@ -154,11 +154,11 @@ func TestVisibleDevicesSortByModel(t *testing.T) {
 
 	descending := visibleDevices(sortFixtures(), nil, sortState{field: sortModel, ascending: false})
 	want = []string{
-		"192.168.127.10 50:0B:88:00:00:03",
-		"192.168.127.9 50:0B:88:00:00:02",
-		"192.168.127.9 50:0B:88:00:00:01",
-		"192.168.127.2 50:0B:88:00:00:04",
-		"192.168.127.1 50:0B:88:00:00:05", // still last: "-" is not a model
+		"192.168.100.10 50:0B:88:00:00:03",
+		"192.168.100.9 50:0B:88:00:00:02",
+		"192.168.100.9 50:0B:88:00:00:01",
+		"192.168.100.2 50:0B:88:00:00:04",
+		"192.168.100.1 50:0B:88:00:00:05", // still last: "-" is not a model
 	}
 	if got := rowKeys(descending); strings.Join(got, "|") != strings.Join(want, "|") {
 		t.Fatalf("model descending =\n  %v\nwant\n  %v", got, want)
@@ -170,11 +170,11 @@ func TestVisibleDevicesSortByModel(t *testing.T) {
 func TestVisibleDevicesSortByIP(t *testing.T) {
 	ascending := visibleDevices(sortFixtures(), nil, sortState{field: sortIP, ascending: true})
 	want := []string{
-		"192.168.127.1 50:0B:88:00:00:05",
-		"192.168.127.2 50:0B:88:00:00:04",
-		"192.168.127.9 50:0B:88:00:00:01", // same IP, model tie -> MAC
-		"192.168.127.9 50:0B:88:00:00:02",
-		"192.168.127.10 50:0B:88:00:00:03", // numeric, not lexicographic
+		"192.168.100.1 50:0B:88:00:00:05",
+		"192.168.100.2 50:0B:88:00:00:04",
+		"192.168.100.9 50:0B:88:00:00:01", // same IP, model tie -> MAC
+		"192.168.100.9 50:0B:88:00:00:02",
+		"192.168.100.10 50:0B:88:00:00:03", // numeric, not lexicographic
 	}
 	if got := rowKeys(ascending); strings.Join(got, "|") != strings.Join(want, "|") {
 		t.Fatalf("IP ascending =\n  %v\nwant\n  %v", got, want)
@@ -182,11 +182,11 @@ func TestVisibleDevicesSortByIP(t *testing.T) {
 
 	descending := visibleDevices(sortFixtures(), nil, sortState{field: sortIP, ascending: false})
 	want = []string{
-		"192.168.127.10 50:0B:88:00:00:03",
-		"192.168.127.9 50:0B:88:00:00:02",
-		"192.168.127.9 50:0B:88:00:00:01",
-		"192.168.127.2 50:0B:88:00:00:04",
-		"192.168.127.1 50:0B:88:00:00:05",
+		"192.168.100.10 50:0B:88:00:00:03",
+		"192.168.100.9 50:0B:88:00:00:02",
+		"192.168.100.9 50:0B:88:00:00:01",
+		"192.168.100.2 50:0B:88:00:00:04",
+		"192.168.100.1 50:0B:88:00:00:05",
 	}
 	if got := rowKeys(descending); strings.Join(got, "|") != strings.Join(want, "|") {
 		t.Fatalf("IP descending =\n  %v\nwant\n  %v", got, want)
@@ -298,7 +298,7 @@ func TestAdapterFilter(t *testing.T) {
 	// A device whose reply carried no adapter is hidden while a filter is on:
 	// it cannot be attributed to any interface.
 	for _, device := range wireless {
-		if device.IP == "192.168.127.1" && len(device.Adapters) == 0 {
+		if device.IP == "192.168.100.1" && len(device.Adapters) == 0 {
 			t.Fatal("a device without adapters must not survive a filter")
 		}
 	}
@@ -328,10 +328,10 @@ func TestFilterAndSortAreIndependent(t *testing.T) {
 	}
 	// Descending IP inside the filtered set.
 	want := []string{
-		"192.168.127.10 50:0B:88:00:00:03",
-		"192.168.127.9 50:0B:88:00:00:01",
-		"192.168.127.2 50:0B:88:00:00:04",
-		"192.168.127.1 50:0B:88:00:00:05",
+		"192.168.100.10 50:0B:88:00:00:03",
+		"192.168.100.9 50:0B:88:00:00:01",
+		"192.168.100.2 50:0B:88:00:00:04",
+		"192.168.100.1 50:0B:88:00:00:05",
 	}
 	if got := rowKeys(filtered); strings.Join(got, "|") != strings.Join(want, "|") {
 		t.Fatalf("filtered + sorted =\n  %v\nwant\n  %v", got, want)
@@ -342,7 +342,7 @@ func TestFilterAndSortAreIndependent(t *testing.T) {
 	if len(cleared) != len(fixtures) {
 		t.Fatalf("cleared rows = %d, want %d", len(cleared), len(fixtures))
 	}
-	if cleared[0].IP != "192.168.127.10" {
+	if cleared[0].IP != "192.168.100.10" {
 		t.Fatalf("the sort was lost when the filter was cleared: %v", rowKeys(cleared))
 	}
 
@@ -367,18 +367,18 @@ func TestFilterStatus(t *testing.T) {
 // TestDeviceRowKeyStable keeps the selection restoration of a rebuild honest:
 // the same device keeps its key, and the key ignores MAC formatting.
 func TestDeviceRowKeyStable(t *testing.T) {
-	first := discovery.Device{IP: "192.168.127.9", MAC: "50:0B:88:00:00:01"}
-	second := discovery.Device{IP: " 192.168.127.9 ", MAC: "50-0b-88-00-00-01"}
+	first := discovery.Device{IP: "192.168.100.9", MAC: "50:0B:88:00:00:01"}
+	second := discovery.Device{IP: " 192.168.100.9 ", MAC: "50-0b-88-00-00-01"}
 	if deviceRowKey(first) != deviceRowKey(second) {
 		t.Fatalf("keys differ: %q vs %q", deviceRowKey(first), deviceRowKey(second))
 	}
-	other := discovery.Device{IP: "192.168.127.9", MAC: "50:0B:88:00:00:02"}
+	other := discovery.Device{IP: "192.168.100.9", MAC: "50:0B:88:00:00:02"}
 	if deviceRowKey(first) == deviceRowKey(other) {
 		t.Fatal("two devices on one address must not share a key")
 	}
 	// Without a MAC the protocol keeps the two rows apart.
-	plain := discovery.Device{IP: "192.168.127.10", Protocol: "MOXA/29168"}
-	secondProtocol := discovery.Device{IP: "192.168.127.10", Protocol: "NPort/1029"}
+	plain := discovery.Device{IP: "192.168.100.10", Protocol: "MOXA/29168"}
+	secondProtocol := discovery.Device{IP: "192.168.100.10", Protocol: "NPort/1029"}
 	if deviceRowKey(plain) == deviceRowKey(secondProtocol) {
 		t.Fatal("MAC-less rows must be told apart by protocol")
 	}
@@ -416,7 +416,7 @@ func TestPanelMinimumHeight(t *testing.T) {
 // panel keeps its table and only learns the new index.
 func TestRebindRowKeepsThePanel(t *testing.T) {
 	panel := &lldpPanel{selectedRow: 0, generation: 4, reading: false}
-	panel.lastInfo = "机箱 ID：0090e80005d0"
+	panel.lastInfo = "机箱 ID：0090e80000d0"
 	panel.rebindRow(7)
 	if panel.selectedRow != 7 {
 		t.Fatalf("selectedRow = %d, want 7", panel.selectedRow)

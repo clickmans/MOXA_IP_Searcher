@@ -54,7 +54,7 @@ func wsuFrameWithFirmwareBlock(t *testing.T, block string) []byte {
 	if len(raw) != wsuFirmwareBlockLen {
 		t.Fatalf("block length = %d, want the fixed %d bytes", len(raw), wsuFirmwareBlockLen)
 	}
-	frame := buildWSUReply("AWK-1131A-US", "192.168.127.253", "50:0B:88:0B:44:9F", "255.255.255.0", "192.168.127.100")
+	frame := buildWSUReply("AWK-1131A-US", "192.168.100.253", "50:0B:88:00:01:9F", "255.255.255.0", "192.168.100.100")
 	if len(frame) != wsuFirmwareMinPayloadLen {
 		t.Fatalf("template length = %d, want %d", len(frame), wsuFirmwareMinPayloadLen)
 	}
@@ -176,11 +176,11 @@ func TestParseWSUFirmwareFromFrame(t *testing.T) {
 			if device.Model != "AWK-1131A-US" {
 				t.Errorf("Model = %q, want AWK-1131A-US", device.Model)
 			}
-			if device.IP != "192.168.127.253" {
-				t.Errorf("IP = %q, want 192.168.127.253", device.IP)
+			if device.IP != "192.168.100.253" {
+				t.Errorf("IP = %q, want 192.168.100.253", device.IP)
 			}
-			if device.MAC != "50:0B:88:0B:44:9F" {
-				t.Errorf("MAC = %q, want 50:0B:88:0B:44:9F", device.MAC)
+			if device.MAC != "50:0B:88:00:01:9F" {
+				t.Errorf("MAC = %q, want 50:0B:88:00:01:9F", device.MAC)
 			}
 			if device.Protocol != ProtoNameWSU {
 				t.Errorf("Protocol = %q, want %q", device.Protocol, ProtoNameWSU)
@@ -231,8 +231,8 @@ func TestWSUFirmwareDoesNotOverwriteKnownFirmware(t *testing.T) {
 	// 1. A row that already knows its version (e.g. the 0x16 answer) keeps it.
 	known := newAggregator()
 	known.add(&Device{
-		IP:       "192.168.127.253",
-		MAC:      "50:0B:88:0B:44:9F",
+		IP:       "192.168.100.253",
+		MAC:      "50:0B:88:00:01:9F",
 		Model:    "AWK-1131A-EU",
 		Firmware: "V1.11",
 		Protocol: ProtoName4800,
@@ -269,7 +269,7 @@ func TestWSUFirmwareDoesNotOverwriteKnownFirmware(t *testing.T) {
 // the one the reference AWK-1137C produces: the WSU reply is received before the
 // 0x16 answer, and the answer of the device itself then takes over.
 func TestAnsweredVersionReplacesProvisionalFirmware(t *testing.T) {
-	deviceID := mustHexBytes("3012198902770090e8ee1c4e")
+	deviceID := mustHexBytes("3012198902770090e800004e")
 	aggregator := newAggregator()
 
 	// The WSU reply first: a row without identity carrying a decoded version.
@@ -307,7 +307,7 @@ func TestAnsweredVersionReplacesProvisionalFirmware(t *testing.T) {
 // firmware is a decoded one is still a candidate for the 0x83 / 0x10 / 0x16
 // queries: the decoded string must not make the device look complete.
 func TestProvisionalFirmwareKeepsDetailQueriesRunning(t *testing.T) {
-	deviceID := mustHexBytes("3012198902770090e8ee1c4e")
+	deviceID := mustHexBytes("3012198902770090e800004e")
 	aggregator := newAggregator()
 	aggregator.add(&Device{
 		IP:                  awkWSUAnswerIP,

@@ -28,7 +28,7 @@ func TestParseIndex(t *testing.T) {
 		remIndex int
 		ok       bool
 	}{
-		// Measured pairs (index, port) from 192.168.127.4.
+		// Measured pairs (index, port) from 192.168.100.4.
 		{index: "0.4.1", port: 4, remIndex: 1, ok: true},
 		{index: "396.2.5", port: 2, remIndex: 5, ok: true},
 		{index: "866.3.1", port: 3, remIndex: 1, ok: true},
@@ -69,11 +69,11 @@ func TestParseIndex(t *testing.T) {
 // foreign OIDs end the column instead of becoming table rows.
 func TestNextColumnValue(t *testing.T) {
 	base := oidRemBase + ".5"
-	text := snmpValue{tag: tagOctetString, raw: []byte("0090e8d65985")}
+	text := snmpValue{tag: tagOctetString, raw: []byte("0090e8000285")}
 
 	if value, ok := nextColumnValue(columnChassisID, base, base+".0.4.1", text); !ok {
 		t.Fatal("a varbind inside the subtree must be accepted")
-	} else if value.Index != "0.4.1" || value.Column != columnChassisID || value.Value != "0090e8d65985" {
+	} else if value.Index != "0.4.1" || value.Column != columnChassisID || value.Value != "0090e8000285" {
 		t.Fatalf("value = %+v", value)
 	}
 
@@ -104,14 +104,14 @@ func TestNextColumnValue(t *testing.T) {
 // port.
 func TestBuildNeighborsMergesColumns(t *testing.T) {
 	values := []columnValue{
-		{Column: columnChassisID, Index: "396.2.5", Value: "c85b76f2204a"},
-		{Column: columnPortID, Index: "396.2.5", Value: "c85b76f2204a"},
-		{Column: columnSystemName, Index: "396.2.5", Value: "Managed Redundant Switch 09561"},
-		{Column: columnChassisID, Index: "0.4.1", Value: "0090e8d65985"},
+		{Column: columnChassisID, Index: "396.2.5", Value: "c85b7600004a"},
+		{Column: columnPortID, Index: "396.2.5", Value: "c85b7600004a"},
+		{Column: columnSystemName, Index: "396.2.5", Value: "Managed Redundant Switch 00004"},
+		{Column: columnChassisID, Index: "0.4.1", Value: "0090e8000285"},
 		{Column: columnPortID, Index: "0.4.1", Value: "7"},
 		{Column: columnPortDesc, Index: "0.4.1", Value: "100FX,SC,Single,40."},
-		{Column: columnSystemName, Index: "0.4.1", Value: "Managed Redundant Switch 49538"},
-		{Column: columnChassisID, Index: "197.3.3", Value: "0090e84cd232"},
+		{Column: columnSystemName, Index: "0.4.1", Value: "Managed Redundant Switch 00003"},
+		{Column: columnChassisID, Index: "197.3.3", Value: "0090e8000032"},
 		// Port 3 without port id / description: those columns stay empty.
 	}
 
@@ -119,24 +119,24 @@ func TestBuildNeighborsMergesColumns(t *testing.T) {
 	want := []Neighbor{
 		{
 			Port:       2,
-			ChassisID:  "c85b76f2204a",
-			PortID:     "c85b76f2204a",
+			ChassisID:  "c85b7600004a",
+			PortID:     "c85b7600004a",
 			PortDesc:   "",
-			SystemName: "Managed Redundant Switch 09561",
+			SystemName: "Managed Redundant Switch 00004",
 		},
 		{
 			Port:       3,
-			ChassisID:  "0090e84cd232",
+			ChassisID:  "0090e8000032",
 			PortID:     "",
 			PortDesc:   "",
 			SystemName: "",
 		},
 		{
 			Port:       4,
-			ChassisID:  "0090e8d65985",
+			ChassisID:  "0090e8000285",
 			PortID:     "7",
 			PortDesc:   "100FX,SC,Single,40.",
-			SystemName: "Managed Redundant Switch 49538",
+			SystemName: "Managed Redundant Switch 00003",
 		},
 	}
 	if len(neighbors) != len(want) {
@@ -380,27 +380,27 @@ func compareOID(left, right string) int {
 	}
 }
 
-// referenceMIB is the LLDP table measured on 192.168.127.4 (PROTOCOL_SPEC.md
+// referenceMIB is the LLDP table measured on 192.168.100.4 (PROTOCOL_SPEC.md
 // §10.4), including a column that the device does not publish (portDesc).
 func referenceMIB() []fakeEntry {
 	return []fakeEntry{
-		{oid: oidChassisID, tag: tagOctetString, raw: mustHex("0090e80005d0")},
-		{oid: oidSystemName, tag: tagOctetString, raw: []byte("Managed Redundant Switch 00007")},
+		{oid: oidChassisID, tag: tagOctetString, raw: mustHex("0090e80000d0")},
+		{oid: oidSystemName, tag: tagOctetString, raw: []byte("Managed Redundant Switch 00001")},
 		{oid: oidSystemDesc, tag: tagOctetString, raw: []byte("EOM-106")},
 		// Column 5: lldpRemChassisId.
-		{oid: oidRemBase + ".5.0.4.1", tag: tagOctetString, raw: mustHex("0090e8d65985")},
-		{oid: oidRemBase + ".5.197.3.3", tag: tagOctetString, raw: mustHex("0090e84cd232")},
-		{oid: oidRemBase + ".5.269.5.4", tag: tagOctetString, raw: mustHex("500b880b6267")},
-		{oid: oidRemBase + ".5.396.2.5", tag: tagOctetString, raw: mustHex("c85b76f2204a")},
+		{oid: oidRemBase + ".5.0.4.1", tag: tagOctetString, raw: mustHex("0090e8000285")},
+		{oid: oidRemBase + ".5.197.3.3", tag: tagOctetString, raw: mustHex("0090e8000032")},
+		{oid: oidRemBase + ".5.269.5.4", tag: tagOctetString, raw: mustHex("500b88000067")},
+		{oid: oidRemBase + ".5.396.2.5", tag: tagOctetString, raw: mustHex("c85b7600004a")},
 		// Column 7: lldpRemPortId.
 		{oid: oidRemBase + ".7.0.4.1", tag: tagOctetString, raw: []byte("7")},
 		{oid: oidRemBase + ".7.197.3.3", tag: tagOctetString, raw: []byte("3")},
 		{oid: oidRemBase + ".7.269.5.4", tag: tagOctetString, raw: []byte("4")},
-		{oid: oidRemBase + ".7.396.2.5", tag: tagOctetString, raw: mustHex("c85b76f2204a")},
+		{oid: oidRemBase + ".7.396.2.5", tag: tagOctetString, raw: mustHex("c85b7600004a")},
 		// Column 9: lldpRemSysName.
-		{oid: oidRemBase + ".9.0.4.1", tag: tagOctetString, raw: []byte("Managed Redundant Switch 49538")},
-		{oid: oidRemBase + ".9.197.3.3", tag: tagOctetString, raw: []byte("Managed Redundant Switch 00007")},
-		{oid: oidRemBase + ".9.269.5.4", tag: tagOctetString, raw: []byte("Managed Redundant Switch 09561")},
+		{oid: oidRemBase + ".9.0.4.1", tag: tagOctetString, raw: []byte("Managed Redundant Switch 00003")},
+		{oid: oidRemBase + ".9.197.3.3", tag: tagOctetString, raw: []byte("Managed Redundant Switch 00001")},
+		{oid: oidRemBase + ".9.269.5.4", tag: tagOctetString, raw: []byte("Managed Redundant Switch 00004")},
 		// Port 2 has no system name, exactly like the measured device.
 	}
 }
@@ -425,10 +425,10 @@ func TestFetchAgainstFakeAgent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
-	if table.ChassisID != "0090e80005d0" {
+	if table.ChassisID != "0090e80000d0" {
 		t.Errorf("ChassisID = %q", table.ChassisID)
 	}
-	if table.SystemName != "Managed Redundant Switch 00007" {
+	if table.SystemName != "Managed Redundant Switch 00001" {
 		t.Errorf("SystemName = %q", table.SystemName)
 	}
 	if table.SystemDesc != "EOM-106" {
@@ -437,10 +437,10 @@ func TestFetchAgainstFakeAgent(t *testing.T) {
 
 	// Sorted by Port ascending: 2, 3, 4, 5.
 	want := []Neighbor{
-		{Port: 2, ChassisID: "c85b76f2204a", PortID: "c85b76f2204a", PortDesc: "", SystemName: ""},
-		{Port: 3, ChassisID: "0090e84cd232", PortID: "3", PortDesc: "", SystemName: "Managed Redundant Switch 00007"},
-		{Port: 4, ChassisID: "0090e8d65985", PortID: "7", PortDesc: "", SystemName: "Managed Redundant Switch 49538"},
-		{Port: 5, ChassisID: "500b880b6267", PortID: "4", PortDesc: "", SystemName: "Managed Redundant Switch 09561"},
+		{Port: 2, ChassisID: "c85b7600004a", PortID: "c85b7600004a", PortDesc: "", SystemName: ""},
+		{Port: 3, ChassisID: "0090e8000032", PortID: "3", PortDesc: "", SystemName: "Managed Redundant Switch 00001"},
+		{Port: 4, ChassisID: "0090e8000285", PortID: "7", PortDesc: "", SystemName: "Managed Redundant Switch 00003"},
+		{Port: 5, ChassisID: "500b88000067", PortID: "4", PortDesc: "", SystemName: "Managed Redundant Switch 00004"},
 	}
 	if len(table.Neighbors) != len(want) {
 		t.Fatalf("len(Neighbors) = %d, want %d: %+v", len(table.Neighbors), len(want), table.Neighbors)
@@ -465,7 +465,7 @@ func TestFetchSkipsStaleRequestIDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
-	if table.ChassisID != "0090e80005d0" {
+	if table.ChassisID != "0090e80000d0" {
 		t.Errorf("ChassisID = %q, want the value of the matching reply", table.ChassisID)
 	}
 	if len(table.Neighbors) != 4 {
@@ -477,7 +477,7 @@ func TestFetchSkipsStaleRequestIDs(t *testing.T) {
 // but has no LLDP neighbour: an empty table, no error.
 func TestFetchWithoutNeighborsAcceptsEmptyTable(t *testing.T) {
 	agent := startFakeAgent(t, []fakeEntry{
-		{oid: oidChassisID, tag: tagOctetString, raw: mustHex("0090e80005d0")},
+		{oid: oidChassisID, tag: tagOctetString, raw: mustHex("0090e80000d0")},
 	})
 	table, err := Fetch(context.Background(), "127.0.0.1", Options{
 		Timeout: 300 * time.Millisecond,
@@ -554,7 +554,7 @@ func TestWalkStopsOnEndValue(t *testing.T) {
 	agent.answerFn = func(pduTag byte, oid string) (string, byte, []byte) {
 		if pduTag == pduGetRequest {
 			if oid == oidChassisID {
-				return oid, tagOctetString, mustHex("0090e80005d0")
+				return oid, tagOctetString, mustHex("0090e80000d0")
 			}
 			return oid, tagNoSuchObject, nil
 		}

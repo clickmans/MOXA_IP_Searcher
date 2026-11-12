@@ -130,12 +130,12 @@ func TestEncodeRequestStructure(t *testing.T) {
 	}
 }
 
-// realResponseHex is a GetResponse captured from 192.168.127.4 for
+// realResponseHex is a GetResponse captured from 192.168.100.4 for
 // lldpRemChassisId.0.4.1: request-id 1, community "public", one varbind with the
 // MAC shaped chassis id 00 90 E8 D6 59 85.
 const realResponseHex = "3032" + "020101" + "04067075626c6963" + "a225" +
 	"020101" + "020100" + "020100" + "301a" + "3018" +
-	"060e28c4620101020104010105000401" + "04060090e8d65985"
+	"060e28c4620101020104010105000401" + "04060090e8000285"
 
 // TestDecodeResponse decodes that real answer.
 func TestDecodeResponse(t *testing.T) {
@@ -173,8 +173,8 @@ func TestDecodeResponse(t *testing.T) {
 	if varbind.Value.tag != tagOctetString {
 		t.Errorf("value tag = %#x, want OCTET STRING", varbind.Value.tag)
 	}
-	if got := varbind.Value.String(); got != "0090e8d65985" {
-		t.Errorf("value = %q, want 0090e8d65985", got)
+	if got := varbind.Value.String(); got != "0090e8000285" {
+		t.Errorf("value = %q, want 0090e8000285", got)
 	}
 }
 
@@ -226,18 +226,18 @@ func TestValueRendering(t *testing.T) {
 		},
 		{
 			name:  "text octet string",
-			value: snmpValue{tag: tagOctetString, raw: []byte("Managed Redundant Switch 00007")},
-			want:  "Managed Redundant Switch 00007",
+			value: snmpValue{tag: tagOctetString, raw: []byte("Managed Redundant Switch 00001")},
+			want:  "Managed Redundant Switch 00001",
 		},
 		{
 			name:  "mac shaped octet string",
-			value: snmpValue{tag: tagOctetString, raw: []byte{0x00, 0x90, 0xE8, 0x00, 0x05, 0xD0}},
-			want:  "0090e80005d0",
+			value: snmpValue{tag: tagOctetString, raw: []byte{0x00, 0x90, 0xE8, 0x00, 0x00, 0xD0}},
+			want:  "0090e80000d0",
 		},
 		{
 			name:  "port id text",
-			value: snmpValue{tag: tagOctetString, raw: []byte("c85b76f2204a")},
-			want:  "c85b76f2204a",
+			value: snmpValue{tag: tagOctetString, raw: []byte("c85b7600004a")},
+			want:  "c85b7600004a",
 		},
 		{
 			name:  "oid value",
@@ -246,8 +246,8 @@ func TestValueRendering(t *testing.T) {
 		},
 		{
 			name:  "ip address",
-			value: snmpValue{tag: tagIPAddress, raw: []byte{192, 168, 127, 4}},
-			want:  "192.168.127.4",
+			value: snmpValue{tag: tagIPAddress, raw: []byte{192, 168, 100, 4}},
+			want:  "192.168.100.4",
 		},
 		{
 			name:  "counter32",
@@ -365,12 +365,12 @@ func TestAgentAddressRejectsUnusableInput(t *testing.T) {
 			t.Errorf("agentAddress(%q) must fail", invalid)
 		}
 	}
-	address, err := agentAddress(" 192.168.127.4 ", snmpPort)
+	address, err := agentAddress(" 192.168.100.4 ", snmpPort)
 	if err != nil {
 		t.Fatalf("agentAddress: %v", err)
 	}
-	if address != "192.168.127.4:161" {
-		t.Errorf("address = %q, want 192.168.127.4:161", address)
+	if address != "192.168.100.4:161" {
+		t.Errorf("address = %q, want 192.168.100.4:161", address)
 	}
 }
 
@@ -416,7 +416,7 @@ func TestFetchUnansweredTimeoutIsNoSNMP(t *testing.T) {
 func TestFetchCancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if _, err := Fetch(ctx, "192.168.127.4", Options{}); !errors.Is(err, context.Canceled) {
+	if _, err := Fetch(ctx, "192.168.100.4", Options{}); !errors.Is(err, context.Canceled) {
 		t.Fatalf("err = %v, want context.Canceled", err)
 	}
 }

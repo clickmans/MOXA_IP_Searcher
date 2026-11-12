@@ -211,7 +211,7 @@ func TestOpenEndpointsFallsBackWhenFixedPortBusy(t *testing.T) {
 	}
 
 	// The device answers the advertised port, so a reply sent there must arrive.
-	device := net.ParseIP("192.168.127.253")
+	device := net.ParseIP("192.168.100.253")
 	if device == nil {
 		t.Fatal("cannot parse the device address")
 	}
@@ -281,7 +281,7 @@ func TestOpenEndpointsKeepsFixedPortWhenFree(t *testing.T) {
 func TestBuildWSURequestsAdvertisesGivenPort(t *testing.T) {
 	ac := adapterCtx{
 		Name: "WLAN",
-		IP:   net.IPv4(192, 168, 127, 10),
+		IP:   net.IPv4(192, 168, 100, 10),
 		Mask: net.CIDRMask(24, 32),
 		MAC:  net.HardwareAddr{0x00, 0x11, 0x22, 0x33, 0x44, 0x55},
 	}

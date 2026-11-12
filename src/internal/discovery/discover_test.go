@@ -149,16 +149,16 @@ func TestDebugfIsSilentByDefault(t *testing.T) {
 
 // TestDedupKeyShape documents the new row identity in one place.
 func TestDedupKeyShape(t *testing.T) {
-	withMAC := &Device{IP: "192.168.127.254", MAC: "50:0B:88:0F:8C:29", Protocol: ProtoName4800}
-	if got, want := dedupKey(withMAC), "mac:50:0B:88:0F:8C:29|ip:192.168.127.254"; got != want {
+	withMAC := &Device{IP: "192.168.100.254", MAC: "50:0B:88:00:00:29", Protocol: ProtoName4800}
+	if got, want := dedupKey(withMAC), "mac:50:0B:88:00:00:29|ip:192.168.100.254"; got != want {
 		t.Errorf("dedupKey = %q, want %q", got, want)
 	}
-	otherIP := &Device{IP: "192.168.127.253", MAC: "50:0B:88:0F:8C:29", Protocol: ProtoName4800}
+	otherIP := &Device{IP: "192.168.100.253", MAC: "50:0B:88:00:00:29", Protocol: ProtoName4800}
 	if dedupKey(withMAC) == dedupKey(otherIP) {
 		t.Error("the same MAC with two IPs must not share a dedup key")
 	}
-	withoutMAC := &Device{IP: "192.168.127.10", Protocol: ProtoName29168}
-	if got, want := dedupKey(withoutMAC), "ip:192.168.127.10|MOXA/29168"; got != want {
+	withoutMAC := &Device{IP: "192.168.100.10", Protocol: ProtoName29168}
+	if got, want := dedupKey(withoutMAC), "ip:192.168.100.10|MOXA/29168"; got != want {
 		t.Errorf("dedupKey = %q, want %q", got, want)
 	}
 }

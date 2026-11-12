@@ -7,12 +7,12 @@ import (
 )
 
 // deviceIDNPort6450 is the 12 byte identity of the NPort 6450 in the reference
-// network (192.168.127.250, MAC 00:90:E8:3C:F2:20).
-var deviceIDNPort6450 = mustHexBytes("0060008050640090e83cf220")
+// network (192.168.100.250, MAC 00:90:E8:00:00:20).
+var deviceIDNPort6450 = mustHexBytes("0060008050640090e8000020")
 
 // deviceIDMGateMB3180 is the 12 byte identity of the MGate MB3180 in the
-// reference network (192.168.127.254, MAC 00:90:E8:F1:DA:9B).
-var deviceIDMGateMB3180 = mustHexBytes("0031008000310090e8f1da9b")
+// reference network (192.168.100.254, MAC 00:90:E8:00:00:9B).
+var deviceIDMGateMB3180 = mustHexBytes("0031008000310090e800009b")
 
 // mustHexBytes decodes a hex string outside of a *testing.T (package level vars).
 func mustHexBytes(encoded string) []byte {
@@ -253,14 +253,14 @@ func TestParseNameReply(t *testing.T) {
 	}{
 		{
 			name:     "NPort 6450 with serial suffix",
-			payload:  append([]byte("NP6450_5599"), 0, 0, 0),
-			wantName: "NP6450_5599",
+			payload:  append([]byte("NP6450_0001"), 0, 0, 0),
+			wantName: "NP6450_0001",
 			wantOK:   true,
 		},
 		{
 			name:     "MGate MB3180 with serial suffix",
-			payload:  append([]byte("MG-MB3180_579"), 0, 0),
-			wantName: "MG-MB3180_579",
+			payload:  append([]byte("MG-MB3180_0001"), 0, 0),
+			wantName: "MG-MB3180_0001",
 			wantOK:   true,
 		},
 		{

@@ -43,7 +43,7 @@ const modelFieldEnd4000 = 64
 // ⚠️ [14:18] is **not** the device address, although PROTOCOL_SPEC.md §3.2 said
 // so and the unit test used to assert exactly that. In a capture of five
 // switches every single answer carries the *requester* address there
-// (192.168.127.100, the PC), while the actual device address is the UDP source
+// (192.168.100.100, the PC), while the actual device address is the UDP source
 // address. That is also how EDSConfig labels the rows: the 64 byte frame has no
 // room for the device address at all - it only appears in the 178 byte unicast
 // detail answer, at [172:176], which is optional. The source address is

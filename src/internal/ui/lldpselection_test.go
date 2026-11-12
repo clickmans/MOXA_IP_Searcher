@@ -144,12 +144,12 @@ func panelApp(devices ...discovery.Device) *App {
 // The notification handler now only queues one message, so the panel is called
 // once with the settled selection.
 func TestOneClickProducesOneRead(t *testing.T) {
-	reader := newFakeReader(t, &lldp.Table{ChassisID: "0090e80005d0"}, nil)
+	reader := newFakeReader(t, &lldp.Table{ChassisID: "0090e80000d0"}, nil)
 	fake := installFakePost(t)
 
 	app := panelApp(
-		discovery.Device{IP: "192.168.127.4", MAC: "00:90:E8:00:05:D0"},
-		discovery.Device{IP: "192.168.127.3", MAC: "50:0B:88:0B:62:67"},
+		discovery.Device{IP: "192.168.100.4", MAC: "00:90:E8:00:00:D0"},
+		discovery.Device{IP: "192.168.100.3", MAC: "50:0B:88:00:00:67"},
 	)
 	app.hMain = 1 // non-zero so the queue posts a message; nothing is delivered
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
@@ -178,10 +178,10 @@ func TestOneClickProducesOneRead(t *testing.T) {
 // TestFiveClicksOnSameRowReadOnce reproduces the QA failure exactly: five clicks
 // on the row that is already selected must read the table once, not five times.
 func TestFiveClicksOnSameRowReadOnce(t *testing.T) {
-	reader := newFakeReader(t, &lldp.Table{ChassisID: "0090e80005d0"}, nil)
+	reader := newFakeReader(t, &lldp.Table{ChassisID: "0090e80000d0"}, nil)
 	fake := installFakePost(t)
 
-	app := panelApp(discovery.Device{IP: "192.168.127.4"})
+	app := panelApp(discovery.Device{IP: "192.168.100.4"})
 	app.hMain = 1
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
 	app.selectedRowsFn = func() []int { return []int{0} }
@@ -214,8 +214,8 @@ func TestSwitchingRowsReadsOncePerDevice(t *testing.T) {
 	installFakePost(t)
 
 	app := panelApp(
-		discovery.Device{IP: "192.168.127.4"},
-		discovery.Device{IP: "192.168.127.3"},
+		discovery.Device{IP: "192.168.100.4"},
+		discovery.Device{IP: "192.168.100.3"},
 	)
 	app.hMain = 1
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
@@ -235,7 +235,7 @@ func TestSwitchingRowsReadsOncePerDevice(t *testing.T) {
 	if app.lldp.generation != 3 {
 		t.Fatalf("generation = %d, want 3", app.lldp.generation)
 	}
-	want := []string{"192.168.127.4", "192.168.127.3", "192.168.127.4"}
+	want := []string{"192.168.100.4", "192.168.100.3", "192.168.100.4"}
 	for index := range want {
 		if reader.ips[index] != want[index] {
 			t.Errorf("read %d = %q, want %q", index, reader.ips[index], want[index])
@@ -249,7 +249,7 @@ func TestRealDeselectResetsPanel(t *testing.T) {
 	reader := newFakeReader(t, &lldp.Table{ChassisID: "x"}, nil)
 	installFakePost(t)
 
-	app := panelApp(discovery.Device{IP: "192.168.127.4"})
+	app := panelApp(discovery.Device{IP: "192.168.100.4"})
 	app.hMain = 1
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
 
@@ -319,14 +319,14 @@ func TestQueueSelectionChangeCollapsesPosts(t *testing.T) {
 // table, it must not hide the fact that two devices sit on one address - SHMP
 // still reaches only the ARP winner.
 func TestPanelSharedIPCountsTheWholeResult(t *testing.T) {
-	reader := newFakeReader(t, &lldp.Table{ChassisID: "0090e84cd232"}, nil)
+	reader := newFakeReader(t, &lldp.Table{ChassisID: "0090e8000032"}, nil)
 	app := &App{
 		// One visible row (the other device is filtered out) ...
-		devices: []discovery.Device{{IP: "192.168.127.253", MAC: "00:90:E8:4C:D2:32"}},
+		devices: []discovery.Device{{IP: "192.168.100.253", MAC: "00:90:E8:00:00:32"}},
 		// ... two devices on that address in the whole result.
 		allDevices: []discovery.Device{
-			{IP: "192.168.127.253", MAC: "00:90:E8:4C:D2:32"},
-			{IP: "192.168.127.253", MAC: "00:90:E8:8C:B6:E4"},
+			{IP: "192.168.100.253", MAC: "00:90:E8:00:00:32"},
+			{IP: "192.168.100.253", MAC: "00:90:E8:00:00:E4"},
 		},
 	}
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
@@ -344,19 +344,19 @@ func TestPanelSharedIPCountsTheWholeResult(t *testing.T) {
 // TestSharedIPCount covers the helper that detects devices on one address.
 func TestSharedIPCount(t *testing.T) {
 	devices := []discovery.Device{
-		{IP: "192.168.127.253", MAC: "00:90:E8:4C:D2:32"},
-		{IP: "192.168.127.253", MAC: "00:90:E8:8C:B6:E4"},
-		{IP: "192.168.127.4", MAC: "00:90:E8:00:05:D0"},
-		{IP: " 192.168.127.4 ", MAC: "00:90:E8:00:05:D1"},
+		{IP: "192.168.100.253", MAC: "00:90:E8:00:00:32"},
+		{IP: "192.168.100.253", MAC: "00:90:E8:00:00:E4"},
+		{IP: "192.168.100.4", MAC: "00:90:E8:00:00:D0"},
+		{IP: " 192.168.100.4 ", MAC: "00:90:E8:00:00:D1"},
 		{},
 	}
-	if got := sharedIPCount(devices, "192.168.127.253"); got != 2 {
+	if got := sharedIPCount(devices, "192.168.100.253"); got != 2 {
 		t.Errorf("sharedIPCount(.253) = %d, want 2", got)
 	}
-	if got := sharedIPCount(devices, "192.168.127.4"); got != 2 {
+	if got := sharedIPCount(devices, "192.168.100.4"); got != 2 {
 		t.Errorf("sharedIPCount(.4) = %d, want 2 (whitespace must not matter)", got)
 	}
-	if got := sharedIPCount(devices, "192.168.127.1"); got != 0 {
+	if got := sharedIPCount(devices, "192.168.100.1"); got != 0 {
 		t.Errorf("sharedIPCount(.1) = %d, want 0", got)
 	}
 	if got := sharedIPCount(devices, ""); got != 0 {
@@ -382,12 +382,12 @@ func TestSharedIPNote(t *testing.T) {
 	}
 
 	table := &lldp.Table{
-		ChassisID:  "0090e80005d0",
-		SystemName: "Managed Redundant Switch 00007",
+		ChassisID:  "0090e80000d0",
+		SystemName: "Managed Redundant Switch 00001",
 		SystemDesc: "EOM-106",
 		Neighbors:  make([]lldp.Neighbor, 4),
 	}
-	const wantSingle = "机箱 ID：0090e80005d0　系统名：Managed Redundant Switch 00007　描述：EOM-106"
+	const wantSingle = "机箱 ID：0090e80000d0　系统名：Managed Redundant Switch 00001　描述：EOM-106"
 
 	// shared == 1: the specification wording, unchanged.
 	single := &lldpPanel{sharedIP: 1, lastInfo: ""}
@@ -411,16 +411,16 @@ func TestSharedIPNote(t *testing.T) {
 // address and checks the summary line the user actually sees.
 func TestPanelShowsSharedIPWarningEndToEnd(t *testing.T) {
 	table := &lldp.Table{
-		ChassisID:  "0090e84cd232",
-		SystemName: "Managed Redundant Switch 01508",
+		ChassisID:  "0090e8000032",
+		SystemName: "Managed Redundant Switch 00002",
 		SystemDesc: "EDS-408A-SS-SC-T",
-		Neighbors:  []lldp.Neighbor{{Port: 3, ChassisID: "0090e80005d0"}},
+		Neighbors:  []lldp.Neighbor{{Port: 3, ChassisID: "0090e80000d0"}},
 	}
 	reader := newFakeReader(t, table, nil)
 
 	app := panelApp(
-		discovery.Device{IP: "192.168.127.253", MAC: "00:90:E8:4C:D2:32"},
-		discovery.Device{IP: "192.168.127.253", MAC: "00:90:E8:8C:B6:E4"},
+		discovery.Device{IP: "192.168.100.253", MAC: "00:90:E8:00:00:32"},
+		discovery.Device{IP: "192.168.100.253", MAC: "00:90:E8:00:00:E4"},
 	)
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
 	app.lldp.onSelectionChanged(0)
@@ -435,7 +435,7 @@ func TestPanelShowsSharedIPWarningEndToEnd(t *testing.T) {
 	}
 
 	app.lldp.onResult()
-	const wantSingle = "机箱 ID：0090e84cd232　系统名：Managed Redundant Switch 01508　描述：EDS-408A-SS-SC-T"
+	const wantSingle = "机箱 ID：0090e8000032　系统名：Managed Redundant Switch 00002　描述：EDS-408A-SS-SC-T"
 	if !strings.HasPrefix(app.lldp.lastInfo, wantSingle) {
 		t.Fatalf("ready summary = %q, want %q as prefix", app.lldp.lastInfo, wantSingle)
 	}
@@ -444,7 +444,7 @@ func TestPanelShowsSharedIPWarningEndToEnd(t *testing.T) {
 	}
 
 	// A device with its own address must not show the warning at all.
-	appOne := panelApp(discovery.Device{IP: "192.168.127.4", MAC: "00:90:E8:00:05:D0"})
+	appOne := panelApp(discovery.Device{IP: "192.168.100.4", MAC: "00:90:E8:00:00:D0"})
 	appOne.lldp = &lldpPanel{app: appOne, selectedRow: -1}
 	appOne.lldp.onSelectionChanged(0)
 	reader.waitFor(t, 2)
@@ -460,9 +460,9 @@ func TestPanelShowsSharedIPWarningEndToEnd(t *testing.T) {
 func TestPanelNoSNMPKeepsSharedWarning(t *testing.T) {
 	reader := newFakeReader(t, nil, lldp.ErrNoSNMP)
 	app := panelApp(
-		discovery.Device{IP: "192.168.127.253"},
-		discovery.Device{IP: "192.168.127.253"},
-		discovery.Device{IP: "192.168.127.253"},
+		discovery.Device{IP: "192.168.100.253"},
+		discovery.Device{IP: "192.168.100.253"},
+		discovery.Device{IP: "192.168.100.253"},
 	)
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
 	app.lldp.onSelectionChanged(0)
@@ -481,7 +481,7 @@ func TestPanelNoSNMPKeepsSharedWarning(t *testing.T) {
 // TestFetchErrorIsReported keeps the generic failure wording covered.
 func TestFetchErrorIsReported(t *testing.T) {
 	reader := newFakeReader(t, nil, errors.New("网络不可达"))
-	app := panelApp(discovery.Device{IP: "192.168.127.4"})
+	app := panelApp(discovery.Device{IP: "192.168.100.4"})
 	app.lldp = &lldpPanel{app: app, selectedRow: -1}
 	app.lldp.onSelectionChanged(0)
 	reader.waitFor(t, 1)

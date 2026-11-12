@@ -46,7 +46,7 @@ func (a Adapter) MaskString() string {
 	return ""
 }
 
-// String renders "192.168.0.163/24 (WLAN)" for the header line of the GUI.
+// String renders "192.168.99.163/24 (WLAN)" for the header line of the GUI.
 func (a Adapter) String() string {
 	return fmt.Sprintf("%s/%d (%s)", a.IP.String(), a.PrefixLen(), a.Name)
 }
@@ -985,7 +985,7 @@ func queryOneDevice(ctx context.Context, adapter Adapter, device Device, timeout
 		}
 	}
 
-	// 0x10: plain device name, e.g. "NP6450_5599".
+	// 0x10: plain device name, e.g. "NP6450_0001".
 	if payload := ask4800(ctx, conn, adapter, device, BuildNameRequest(deviceID, seqNameBase), replyHeader4800Name, timeout); payload != nil {
 		if id, name, ok := ParseNameReply(payload); ok {
 			aggregator.setName(id, device.IP, name)

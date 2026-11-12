@@ -1167,7 +1167,7 @@ func (a *App) setStatus(text string) { setWindowText(a.hStatus, text) }
 
 // refreshAdapters refreshes the adapter information.
 //
-// The old header line ("已启用网卡：192.168.0.163/24 (WLAN) · ...") is gone
+// The old header line ("已启用网卡：192.168.99.163/24 (WLAN) · ...") is gone
 // (U2): the short form goes to the status line and the full list is available
 // as a tooltip on the status bar, so no information is lost.
 func (a *App) refreshAdapters() {
@@ -1244,7 +1244,7 @@ func emptyAsDash(value string) string {
 // modelCell is the 产品型号 cell (U4).
 //
 // The v1.2 fallback chain - answered model, else the model derived from the
-// device name (NP6450_5599 -> NPort 6450), else "-" - lives in package
+// device name (NP6450_0001 -> NPort 6450), else "-" - lives in package
 // discovery, so the table, the clipboard and the JSON output cannot drift
 // apart and no mapping table is duplicated in the GUI.
 func modelCell(device discovery.Device) string {

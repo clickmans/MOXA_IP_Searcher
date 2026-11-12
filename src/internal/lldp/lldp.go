@@ -10,7 +10,7 @@ import (
 
 // OIDs of the standard LLDP MIB (IEEE 802.1AB, implemented as 1.0.8802.1.1.2).
 //
-// Every value below was read from a live device (192.168.127.4, an EOM-106) and
+// Every value below was read from a live device (192.168.100.4, an EOM-106) and
 // compared row by row with the LLDP page of MXConfigCS; see
 // docs/PROTOCOL_SPEC.md §10.1 and §10.2.
 const (
@@ -18,9 +18,9 @@ const (
 	// (macAddress) on the measured devices and is therefore only used as the
 	// liveness probe, never displayed.
 	oidChassisIDSubtype = "1.0.8802.1.1.2.1.3.1.0"
-	// oidChassisID is lldpLocChassisId, e.g. "0090e80005d0".
+	// oidChassisID is lldpLocChassisId, e.g. "0090e80000d0".
 	oidChassisID = "1.0.8802.1.1.2.1.3.2.0"
-	// oidSystemName is lldpLocSysName, e.g. "Managed Redundant Switch 00007".
+	// oidSystemName is lldpLocSysName, e.g. "Managed Redundant Switch 00001".
 	oidSystemName = "1.0.8802.1.1.2.1.3.3.0"
 	// oidSystemDesc is lldpLocSysDesc, e.g. "EOM-106".
 	oidSystemDesc = "1.0.8802.1.1.2.1.3.4.0"
@@ -53,9 +53,9 @@ var neighborColumns = []int{columnChassisID, columnPortID, columnPortDesc, colum
 type Neighbor struct {
 	// Port is the local port number, e.g. 4.
 	Port int
-	// ChassisID is the neighbour chassis id, e.g. "0090e8d65985".
+	// ChassisID is the neighbour chassis id, e.g. "0090e8000285".
 	ChassisID string
-	// PortID is the neighbour port id, e.g. "7" or "c85b76f2204a".
+	// PortID is the neighbour port id, e.g. "7" or "c85b7600004a".
 	PortID string
 	// PortDesc is the neighbour port description, e.g. "100FX,SC,Single,40.".
 	PortDesc string
@@ -65,7 +65,7 @@ type Neighbor struct {
 
 // Table is the LLDP view of one device: its own identity plus its neighbours.
 type Table struct {
-	// ChassisID is the local chassis id, e.g. "0090e80005d0".
+	// ChassisID is the local chassis id, e.g. "0090e80000d0".
 	ChassisID string
 	// SystemName is the local system name.
 	SystemName string

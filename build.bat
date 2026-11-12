@@ -11,7 +11,7 @@ set CGO_ENABLED=0
 set GOOS=windows
 set GOARCH=amd64
 
-set GOEXE=C:\Program Files\Go\bin\go.exe
+set GOEXE=%ProgramFiles%\Go\bin\go.exe
 if not exist "%GOEXE%" set GOEXE=go
 
 echo ==^> 运行单元测试
