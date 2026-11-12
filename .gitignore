@@ -1,0 +1,12 @@
+# 构建产物（二进制走 GitHub Releases 附件，不进仓库）
+dist/
+*.exe
+
+# 现场取证与一次性分析（抓包、截图、临时脚本，体积大且含内网地址）
+_analysis/
+
+# 编辑器 / 系统残留
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

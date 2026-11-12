@@ -1,0 +1,13 @@
+* text=auto
+
+# Go 源码与文档用 LF，PowerShell / 批处理保持 CRLF（Windows 双击可运行）
+*.go   text eol=lf
+*.md   text eol=lf
+*.mod  text eol=lf
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+
+# 图标资源（PE 资源，二进制）
+*.syso binary
+*.ico  binary
+*.png  binary
